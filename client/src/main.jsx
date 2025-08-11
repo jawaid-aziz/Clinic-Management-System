@@ -1,6 +1,7 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { RoleProvider } from "./Context/RoleProvider.jsx";
 import { AllRoutes } from "./Routes.jsx";
 import './index.css'
 
@@ -11,7 +12,9 @@ function Main() {
 
   return (
   <StrictMode>
-    <RouterProvider router={router} />
+    <RoleProvider>
+      <RouterProvider router={router} />
+    </RoleProvider>
   </StrictMode>
 )}
 
