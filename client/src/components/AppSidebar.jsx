@@ -34,55 +34,6 @@ export function AppSidebar({ role }) {
       url: "/",
       icon: Home,
     },
-    {
-      title: "Attendance",
-      icon: ClipboardList,
-      children: [
-        { title: "View Attendance", url: `/attendance-history/${id}` },
-      ],
-    },
-    ...(role === "admin"
-      ? [
-          {
-            title: "Employees",
-            icon: Users,
-            children: [
-              { title: "Employees List", url: "/employees-data" },
-              { title: "Add Employee", url: "/add-employee" },
-            ],
-          },
-        ]
-      : []),
-    {
-      title: "Projects",
-      icon: FolderDot,
-      children: [
-        ...(role == "admin" ? [{ title: "Add", url: `/add-project` }] : []),
-        { title: "View", url: `/projects` },
-      ],
-    },
-    {
-      title: "Tasks",
-      icon: ListTodo,
-      children: [
-        ...(role == "admin" ? [{ title: "Add", url: `/add-task` }] : []),
-        { title: "View", url: `/tasks` },
-      ],
-    },
-    {
-      title: "Settings",
-      icon: Settings,
-      children: [
-        { title: "Profile", url: `/profile/${id}` },
-        ...(role === "admin"
-          ? [
-              { title: "Timezone", url: `/timezone` },
-              { title: "Configuration", url: `/config` },
-              { title: "Office Timing", url: `/officeTime` },
-            ]
-          : []),
-      ],
-    },
   ];
 
   const handleLogout = () => {
@@ -105,7 +56,7 @@ export function AppSidebar({ role }) {
       <SidebarContent className="bg-cornflower-blue-300">
         <SidebarGroup>
           <SidebarGroupLabel className="text-sm text-l">
-            OnTime Attendance
+            Clinic Management System
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>

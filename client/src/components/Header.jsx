@@ -11,7 +11,7 @@ import { LogOut, Menu, UserCircle } from "lucide-react";
 
 export const Header = ({ role }) => {
   const navigate = useNavigate();
-  
+
   const handleLogout = () => {
     localStorage.removeItem("role");
     console.log("Role removed from localStorage.");
@@ -31,12 +31,13 @@ export const Header = ({ role }) => {
 
       <div>
         <h1 className="text-2xl font-semibold text-gray-800 tracking-wide">
-          {role === "admin" ? "Admin Dashboard" : "User Dashboard"}
+          {role === "reception" && "Reception"}
+          {role === "paeds" && "Paediatrics"}
+          {role === "gynae" && "Gynaecology"}
         </h1>
       </div>
 
       <div className="flex items-center space-x-2">
-
         {/* Profile Dropdown */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
