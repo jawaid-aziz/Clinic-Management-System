@@ -2,14 +2,13 @@ import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import {
   Home,
-  Settings,
-  Users,
-  ClipboardList,
   LogOut,
   ChevronDown,
   ChevronUp,
-  FolderDot,
-  ListTodo,
+  CalendarCheck, // Appointments
+  Users, // Patients
+  FileText, // Templates
+  Settings, // Settings
 } from "lucide-react";
 import {
   Sidebar,
@@ -34,13 +33,48 @@ export function AppSidebar({ role }) {
       url: "/",
       icon: Home,
     },
+    {
+      title: "Appointments",
+      icon: CalendarCheck,
+      children: [{ title: "View Pending Appointments", url: `/appointments` }],
+    },
+    ...(role === "reception"
+      ? [
+          {
+            title: "Patients",
+            icon: Users,
+            children: [
+              { title: "Add Patient", url: "/add-patient" },
+              { title: "Patients History", url: "/patients-history" },
+            ],
+          },
+        ]
+      : []),
+    ...(role === "paeds" || role === "gynae"
+      ? [
+          {
+            title: "Patients",
+            icon: Users,
+            children: [{ title: "Patients History", url: "/patients-history" }],
+          },
+          {
+            title: "Templates",
+            icon: FileText,
+            children: [{ title: "View Templates", url: "/templates" }],
+          },
+        ]
+      : []),
+    {
+      title: "Settings",
+      url: "/settings",
+      icon: Settings,
+    },
   ];
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
     localStorage.removeItem("role");
-    localStorage.removeItem("id");
-    console.log("Token, role, and id removed from localStorage.");
+    console.log("Role removed from localStorage.");
+    window.location.reload();
     navigate("/login");
   };
 
@@ -60,8 +94,8 @@ export function AppSidebar({ role }) {
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {menuItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
+              {menuItems.map((item, idx) => (
+                <SidebarMenuItem key={`${item.title}-${idx}`}>
                   <div
                     className={`flex items-center justify-between p-1 gap-2 rounded-md ${
                       item.children ? "" : "hover:bg-gray-100"

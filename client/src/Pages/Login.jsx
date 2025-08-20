@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -25,12 +25,19 @@ export const Login = () => {
   
   const navigate = useNavigate();
   const { setRole } = useRole();
+  const { role } = useRole();
 
   const handleRoleClick = (role) => {
     setSelectedRole(role);
     setPin("");
     setOpen(true);
   };
+
+    useEffect(() => {
+    if (role) {
+      navigate("/"); // already logged in, push to home
+    }
+  }, [role, navigate]);
 
   const handleLogin = () => {
     if (pin === ROLE_PINS[selectedRole]) {

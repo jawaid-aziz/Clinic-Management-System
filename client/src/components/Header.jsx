@@ -15,6 +15,7 @@ export const Header = ({ role }) => {
   const handleLogout = () => {
     localStorage.removeItem("role");
     console.log("Role removed from localStorage.");
+    window.location.reload();
     navigate("/login");
   };
 
