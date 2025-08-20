@@ -1,8 +1,9 @@
-// src/routes.js (or where you define routes)
 import { Login } from "./Pages/Login";
 import { Home } from "./Pages/Home";
 import { Layout } from "./Pages/Layout";
 import { ProtectedRoute } from "./lib/ProtectedRoute";
+import { AddPatient } from "./components/AddPatient";
+import path from "path";
 
 export const AllRoutes = [
   {
@@ -21,6 +22,10 @@ export const AllRoutes = [
             path: "/",
             element: <Home />,
           },
+          {
+            path: "/add-patient",
+            element: <AddPatient />,
+          }
         ],
       },
     ],
