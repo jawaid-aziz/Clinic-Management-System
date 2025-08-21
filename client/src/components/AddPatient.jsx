@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -13,6 +14,75 @@ import {
 import { Separator } from "@/components/ui/separator";
 
 export const AddPatient = () => {
+  const [form, setForm] = useState({
+    mrn: "",
+    name: "",
+    sex: "",
+    age: "",
+    date: "",
+    time: "",
+    doctor: "",
+    cnic: "",
+    phone: "",
+    weight: "",
+    height: "",
+    bp: "",
+    pulse: "",
+    temperature: "",
+    vco: false,
+    gestation: "",
+  });
+
+  const handleChange = (key, value) => {
+    setForm((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const handleSubmit = async () => {
+    try {
+      const res = await fetch("http://localhost:5000/api/appointments/add-appointment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: form.name,
+          age: form.age,
+          phone: form.phone,
+          date: form.date,
+          time: form.time,
+          doctor: form.doctor,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        alert("Appointment booked successfully ✅");
+        setForm({
+          mrn: "",
+          name: "",
+          sex: "",
+          age: "",
+          date: "",
+          time: "",
+          doctor: "",
+          cnic: "",
+          phone: "",
+          weight: "",
+          height: "",
+          bp: "",
+          pulse: "",
+          temperature: "",
+          vco: false,
+          gestation: "",
+        });
+      } else {
+        alert("Error: " + data.error);
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Something went wrong");
+    }
+  };
+
   return (
     <div className="flex justify-center items-center p-6">
       <Card className="w-full max-w-3xl shadow-lg">
@@ -25,15 +95,27 @@ export const AddPatient = () => {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label>MRN</Label>
-              <Input placeholder="Enter MRN" />
+              <Input
+                value={form.mrn}
+                onChange={(e) => handleChange("mrn", e.target.value)}
+                placeholder="Enter MRN"
+              />
             </div>
             <div>
               <Label>Patient Name</Label>
-              <Input placeholder="Enter Name" />
+              <Input
+                value={form.name}
+                onChange={(e) => handleChange("name", e.target.value)}
+                placeholder="Enter Name"
+              />
             </div>
             <div>
               <Label>Sex</Label>
-              <RadioGroup className="flex space-x-4">
+              <RadioGroup
+                value={form.sex}
+                onValueChange={(val) => handleChange("sex", val)}
+                className="flex space-x-4"
+              >
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="male" id="male" />
                   <Label htmlFor="male">Male</Label>
@@ -46,15 +128,27 @@ export const AddPatient = () => {
             </div>
             <div>
               <Label>Age</Label>
-              <Input placeholder="Enter Age" />
+              <Input
+                value={form.age}
+                onChange={(e) => handleChange("age", e.target.value)}
+                placeholder="Enter Age"
+              />
             </div>
             <div>
               <Label>Date</Label>
-              <Input type="date" />
+              <Input
+                type="date"
+                value={form.date}
+                onChange={(e) => handleChange("date", e.target.value)}
+              />
             </div>
             <div>
               <Label>Time</Label>
-              <Input type="time" />
+              <Input
+                type="time"
+                value={form.time}
+                onChange={(e) => handleChange("time", e.target.value)}
+              />
             </div>
           </div>
 
@@ -64,7 +158,10 @@ export const AddPatient = () => {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label>Doctor</Label>
-              <RadioGroup>
+              <RadioGroup
+                value={form.doctor}
+                onValueChange={(val) => handleChange("doctor", val)}
+              >
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="dr_ejaz" id="dr_ejaz" />
                   <Label htmlFor="dr_ejaz">Dr. Ejaz</Label>
@@ -77,13 +174,21 @@ export const AddPatient = () => {
             </div>
             <div>
               <Label>CNIC</Label>
-              <Input placeholder="Enter CNIC" />
+              <Input
+                value={form.cnic}
+                onChange={(e) => handleChange("cnic", e.target.value)}
+                placeholder="Enter CNIC"
+              />
             </div>
           </div>
 
           <div>
             <Label>Contact No</Label>
-            <Input placeholder="Enter Contact Number" />
+            <Input
+              value={form.phone}
+              onChange={(e) => handleChange("phone", e.target.value)}
+              placeholder="Enter Contact Number"
+            />
           </div>
 
           <Separator />
@@ -92,26 +197,50 @@ export const AddPatient = () => {
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             <div>
               <Label>Weight</Label>
-              <Input placeholder="kg" />
+              <Input
+                value={form.weight}
+                onChange={(e) => handleChange("weight", e.target.value)}
+                placeholder="kg"
+              />
             </div>
             <div>
               <Label>Height</Label>
-              <Input placeholder="cm" />
+              <Input
+                value={form.height}
+                onChange={(e) => handleChange("height", e.target.value)}
+                placeholder="cm"
+              />
             </div>
             <div>
               <Label>B.P</Label>
-              <Input placeholder="mmHg" />
+              <Input
+                value={form.bp}
+                onChange={(e) => handleChange("bp", e.target.value)}
+                placeholder="mmHg"
+              />
             </div>
             <div>
               <Label>Pulse</Label>
-              <Input placeholder="bpm" />
+              <Input
+                value={form.pulse}
+                onChange={(e) => handleChange("pulse", e.target.value)}
+                placeholder="bpm"
+              />
             </div>
             <div>
               <Label>Temperature</Label>
-              <Input placeholder="°C" />
+              <Input
+                value={form.temperature}
+                onChange={(e) => handleChange("temperature", e.target.value)}
+                placeholder="°C"
+              />
             </div>
             <div className="flex items-center space-x-2">
-              <Checkbox id="vco" />
+              <Checkbox
+                checked={form.vco}
+                onCheckedChange={(val) => handleChange("vco", val)}
+                id="vco"
+              />
               <Label htmlFor="vco">VCO</Label>
             </div>
           </div>
@@ -121,7 +250,11 @@ export const AddPatient = () => {
           {/* Gestation */}
           <div>
             <Label>Gestation</Label>
-            <RadioGroup className="flex space-x-6 mt-2">
+            <RadioGroup
+              value={form.gestation}
+              onValueChange={(val) => handleChange("gestation", val)}
+              className="flex space-x-6 mt-2"
+            >
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="single" id="single" />
                 <Label htmlFor="single">Single</Label>
@@ -135,7 +268,7 @@ export const AddPatient = () => {
         </CardContent>
 
         <CardFooter className="flex justify-end">
-          <Button>Book the Appointment</Button>
+          <Button onClick={handleSubmit}>Book the Appointment</Button>
         </CardFooter>
       </Card>
     </div>

@@ -1,14 +1,38 @@
-import Database from "better-sqlite3";
-import path from "path";
-import { fileURLToPath } from "url";
+const Database = require("better-sqlite3");
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const db = new Database("./appointments/appointments.db");
 
-const dbPath = path.join(__dirname, "../database.sqlite");
+db.exec(`
+  CREATE TABLE IF NOT EXISTS patients (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    mrn TEXT,
+    name TEXT,
+    sex TEXT,
+    age INTEGER,
+    doctor TEXT,
+    cnic TEXT,
+    contact TEXT,
+    status TEXT DEFAULT 'pending', -- pending | completed
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  )
+`);
 
-const db = new Database(dbPath);
+db.exec(`
+  CREATE TABLE IF NOT EXISTS appointments (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    patient_id INTEGER,
+    date TEXT,
+    time TEXT,
+    weight TEXT,
+    height TEXT,
+    bp TEXT,
+    pulse TEXT,
+    temperature TEXT,
+    vco BOOLEAN,
+    gestation TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (patient_id) REFERENCES patients(id)
+  )
+`);
 
-console.log("SQLite database connected");
-
-export default db;
+module.exports = db;
