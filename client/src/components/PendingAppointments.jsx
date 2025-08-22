@@ -1,6 +1,72 @@
+import { useEffect, useState } from "react";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { Loader2 } from "lucide-react";
+
 export const PendingAppointments = () => {
+  const [appointments, setAppointments] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch pending appointments from backend
+  useEffect(() => {
+    const fetchAppointments = async () => {
+      try {
+        const res = await fetch("http://localhost:8000/api/appointments/pending");
+        const data = await res.json();
+        setAppointments(data.data || []);
+      } catch (error) {
+        console.error("Error fetching appointments:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchAppointments();
+  }, []);
+
+  const handleStart = (id) => {
+    console.log("Starting appointment:", id);
+    // here you can call API to update status -> Completed/Active
+  };
+
+  if (loading) {
     return (
-        <>
-        </>
-    )
-}
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="w-6 h-6 animate-spin" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-6 space-y-4">
+      <h1 className="text-2xl font-bold">Pending Appointments</h1>
+
+      {appointments.length === 0 ? (
+        <p className="text-muted-foreground">No pending appointments.</p>
+      ) : (
+        appointments.map((appt) => (
+          <Card key={appt._id} className="shadow-md rounded-2xl">
+            <CardHeader>
+              <CardTitle>{appt.name}</CardTitle>
+              <p className="text-sm text-muted-foreground">
+                MRN: {appt.mrn} | {appt.sex}, {appt.age} yrs
+              </p>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <p><strong>Doctor:</strong> {appt.doctor}</p>
+                <p><strong>Date:</strong> {new Date(appt.date).toLocaleDateString()}</p>
+                <p><strong>Time:</strong> {appt.timeIn}</p>
+                <p><strong>Phone:</strong> {appt.phone}</p>
+              </div>
+
+              <Separator className="my-3" />
+
+              <Button onClick={() => handleStart(appt._id)}>Start</Button>
+            </CardContent>
+          </Card>
+        ))
+      )}
+    </div>
+  );
+};

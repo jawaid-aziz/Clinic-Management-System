@@ -4,8 +4,8 @@ const { addAppointment,
     pendingAppointments,
     historyAppointments, } = require('../controllers/appointments');
 
-router.post("/add-appointment", addAppointment);
-router.get("/get-appointments", pendingAppointments);
-router.get("/get-history-appointments", historyAppointments);
+router.post("/add", addAppointment);
+router.get("/pending", pendingAppointments);
+router.get("/history", historyAppointments);
 
 module.exports = router;

@@ -41,7 +41,7 @@ export const AddAppointment = () => {
   const handleSubmit = async () => {
     try {
       const res = await fetch(
-        "http://localhost:8000/api/appointments/add-appointment",
+        "http://localhost:8000/api/appointments/add",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
