@@ -6,7 +6,6 @@ import {
   ChevronDown,
   ChevronUp,
   CalendarCheck, // Appointments
-  Users, // Patients
   FileText, // Templates
   Settings, // Settings
 } from "lucide-react";
@@ -36,27 +35,14 @@ export function AppSidebar({ role }) {
     {
       title: "Appointments",
       icon: CalendarCheck,
-      children: [{ title: "View Pending Appointments", url: `/appointments` }],
+      children: [
+        { title: "Add", url: `/add-appointment` },
+        { title: "Pending", url: `/pending-appointments` },
+        { title: "History", url: `/history-appointments` },
+      ],
     },
-    ...(role === "reception"
-      ? [
-          {
-            title: "Patients",
-            icon: Users,
-            children: [
-              { title: "Add Patient", url: "/add-patient" },
-              { title: "Patients History", url: "/patients-history" },
-            ],
-          },
-        ]
-      : []),
     ...(role === "paeds" || role === "gynae"
       ? [
-          {
-            title: "Patients",
-            icon: Users,
-            children: [{ title: "Patients History", url: "/patients-history" }],
-          },
           {
             title: "Templates",
             icon: FileText,

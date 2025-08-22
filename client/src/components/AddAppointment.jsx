@@ -13,14 +13,15 @@ import {
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 
-export const AddPatient = () => {
+export const AddAppointment = () => {
   const [form, setForm] = useState({
     mrn: "",
     name: "",
     sex: "",
     age: "",
     date: "",
-    time: "",
+    timeIn: "",
+    timeOut: "",
     doctor: "",
     cnic: "",
     phone: "",
@@ -39,18 +40,32 @@ export const AddPatient = () => {
 
   const handleSubmit = async () => {
     try {
-      const res = await fetch("http://localhost:5000/api/appointments/add-appointment", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: form.name,
-          age: form.age,
-          phone: form.phone,
-          date: form.date,
-          time: form.time,
-          doctor: form.doctor,
-        }),
-      });
+      const res = await fetch(
+        "http://localhost:8000/api/appointments/add-appointment",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            mrn: form.mrn,
+            name: form.name,
+            sex: form.sex,
+            age: form.age,
+            date: form.date,
+            timeIn: form.timeIn,
+            timeOut: form.timeOut,
+            doctor: form.doctor,
+            cnic: form.cnic,
+            phone: form.phone,
+            height: form.height,
+            weight: form.weight,
+            bp: form.bp,
+            pulse: form.pulse,
+            temperature: form.temperature,
+            vco: form.vco,
+            gestation: form.gestation,
+          }),
+        }
+      );
 
       const data = await res.json();
 
@@ -62,7 +77,8 @@ export const AddPatient = () => {
           sex: "",
           age: "",
           date: "",
-          time: "",
+          timeIn: "",
+          timeOut: "",
           doctor: "",
           cnic: "",
           phone: "",
@@ -87,7 +103,7 @@ export const AddPatient = () => {
     <div className="flex justify-center items-center p-6">
       <Card className="w-full max-w-3xl shadow-lg">
         <CardHeader>
-          <CardTitle className="text-xl text-center">Add a Patient</CardTitle>
+          <CardTitle className="text-xl text-center">Add an Appointment</CardTitle>
         </CardHeader>
 
         <CardContent className="space-y-4">
@@ -143,11 +159,11 @@ export const AddPatient = () => {
               />
             </div>
             <div>
-              <Label>Time</Label>
+              <Label>Time-in</Label>
               <Input
                 type="time"
-                value={form.time}
-                onChange={(e) => handleChange("time", e.target.value)}
+                value={form.timeIn}
+                onChange={(e) => handleChange("timeIn", e.target.value)}
               />
             </div>
           </div>
@@ -163,12 +179,12 @@ export const AddPatient = () => {
                 onValueChange={(val) => handleChange("doctor", val)}
               >
                 <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="dr_ejaz" id="dr_ejaz" />
-                  <Label htmlFor="dr_ejaz">Dr. Ejaz</Label>
+                  <RadioGroupItem value="paediatrics" id="paediatrics" />
+                  <Label htmlFor="paediatrics">Dr. Ejaz</Label>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="dr_salma" id="dr_salma" />
-                  <Label htmlFor="dr_salma">Dr. Salma</Label>
+                  <RadioGroupItem value="gynae" id="gynae" />
+                  <Label htmlFor="gynae">Dr. Salma</Label>
                 </div>
               </RadioGroup>
             </div>
@@ -264,6 +280,14 @@ export const AddPatient = () => {
                 <Label htmlFor="multiple">Multiple</Label>
               </div>
             </RadioGroup>
+          </div>
+          <div>
+            <Label>Time-out</Label>
+            <Input
+              type="time"
+              value={form.timeOut}
+              onChange={(e) => handleChange("timeOut", e.target.value)}
+            />
           </div>
         </CardContent>
 

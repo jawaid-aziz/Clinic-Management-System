@@ -5,7 +5,6 @@ require("dotenv").config();
 const connectToMongoDB = require('./config/db');
 
 const appointmentsRouter = require('./routes/appointments');
-const patientsRouter = require('./routes/patients');
 const templatesRouter = require('./routes/templates');
 
 const app = express();
@@ -23,7 +22,6 @@ connectToMongoDB(process.env.MONGO_URL)
 
 //Routes
 app.use("/api/appointments", appointmentsRouter);
-app.use("/api/patients", patientsRouter);
 app.use("/api/templates", templatesRouter);
 
 // Server start

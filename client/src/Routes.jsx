@@ -2,8 +2,9 @@ import { Login } from "./Pages/Login";
 import { Home } from "./Pages/Home";
 import { Layout } from "./Pages/Layout";
 import { ProtectedRoute } from "./lib/ProtectedRoute";
-import { AddPatient } from "./components/AddPatient";
-import path from "path";
+import { AddAppointment } from "./components/AddAppointment";
+import { PendingAppointments } from "./components/PendingAppointments";
+import { HistoryAppointments } from "./components/HistoryAppointments";
 
 export const AllRoutes = [
   {
@@ -23,9 +24,17 @@ export const AllRoutes = [
             element: <Home />,
           },
           {
-            path: "/add-patient",
-            element: <AddPatient />,
-          }
+            path: "/add-appointment",
+            element: <AddAppointment />,
+          },
+          {
+            path: "/pending-appointments",
+            element: <PendingAppointments />,
+          },
+          {
+            path: "/history-appointments",
+            element: <HistoryAppointments />,
+          },
         ],
       },
     ],
