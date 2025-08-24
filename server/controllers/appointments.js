@@ -1,4 +1,8 @@
 const Appointment = require("../models/appointment");
+const path = require("path");
+const fs = require("fs");
+const multer = require("multer");
+const Prescription = require("../models/Prescription");
 
 // Add a new appointment
 async function addAppointment(req, res) {
@@ -109,9 +113,119 @@ async function getAppointmentData(req, res) {
   }
 }
 
+// ✅ Update appointment time (timeIn & timeOut)
+async function updateAppointmentTime(req, res) {
+  try {
+    const { id } = req.params;
+    const { timeIn, timeOut } = req.body;
+
+    if (!timeIn || !timeOut) {
+      return res.status(400).json({
+        success: false,
+        message: "Both timeIn and timeOut are required",
+      });
+    }
+
+    const updatedAppointment = await Appointment.findByIdAndUpdate(
+      id,
+      { timeIn, timeOut },
+      { new: true } // return updated doc
+    );
+
+    if (!updatedAppointment) {
+      return res.status(404).json({
+        success: false,
+        message: "Appointment not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Appointment updated successfully",
+      data: updatedAppointment,
+    });
+  } catch (error) {
+    console.error("Error updating appointment time:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to update appointment",
+      error: error.message,
+    });
+  }
+}
+
+// Create folder if not exists
+const prescriptionsDir = path.join(__dirname, "../Prescriptions");
+if (!fs.existsSync(prescriptionsDir)) {
+  fs.mkdirSync(prescriptionsDir);
+}
+
+// Configure multer storage
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, prescriptionsDir);
+  },
+  filename: function (req, file, cb) {
+    const { mrn } = req.body;
+    if (!mrn) {
+      return cb(new Error("MRN is required"), null);
+    }
+    cb(null, `${mrn}.pdf`); // unique file name
+  },
+});
+
+const fileFilter = (req, file, cb) => {
+  if (file.mimetype === "application/pdf") {
+    cb(null, true);
+  } else {
+    cb(new Error("Only PDF files are allowed"), false);
+  }
+};
+
+const upload = multer({ storage, fileFilter });
+
+// Controller to handle prescription upload
+async function uploadPrescription(req, res) {
+  try {
+    const { mrn } = req.body;
+
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: "No file uploaded",
+      });
+    }
+
+    // Save record in DB
+    const prescription = new Prescription({
+      mrn,
+      fileName: req.file.filename,
+      filePath: `/Prescriptions/${req.file.filename}`,
+    });
+
+    await prescription.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Prescription saved successfully",
+      data: prescription,
+    });
+  } catch (error) {
+    console.error("Error saving prescription:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to save prescription",
+      error: error.message,
+    });
+  }
+}
+
 module.exports = {
   addAppointment,
   pendingAppointments,
   historyAppointments,
+  updateAppointmentTime,
   getAppointmentData,
+  uploadPrescription,
+  upload,
 };
