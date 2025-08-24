@@ -3,10 +3,12 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Loader2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export const PendingAppointments = () => {
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   // Fetch pending appointments from backend
   useEffect(() => {
@@ -15,6 +17,7 @@ export const PendingAppointments = () => {
         const res = await fetch("http://localhost:8000/api/appointments/pending");
         const data = await res.json();
         setAppointments(data.data || []);
+        console.log(data)
       } catch (error) {
         console.error("Error fetching appointments:", error);
       } finally {
@@ -25,8 +28,7 @@ export const PendingAppointments = () => {
   }, []);
 
   const handleStart = (id) => {
-    console.log("Starting appointment:", id);
-    // here you can call API to update status -> Completed/Active
+    navigate(`/appointment/${id}`);
   };
 
   if (loading) {
@@ -62,7 +64,7 @@ export const PendingAppointments = () => {
 
               <Separator className="my-3" />
 
-              <Button onClick={() => handleStart(appt._id)}>Start</Button>
+              <Button onClick={() => handleStart(appt._id)} className="cursor-pointer">Start</Button>
             </CardContent>
           </Card>
         ))

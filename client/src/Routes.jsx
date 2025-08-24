@@ -5,6 +5,7 @@ import { ProtectedRoute } from "./lib/ProtectedRoute";
 import { AddAppointment } from "./components/AddAppointment";
 import { PendingAppointments } from "./components/PendingAppointments";
 import { HistoryAppointments } from "./components/HistoryAppointments";
+import { Appointment } from "./components/Appointment";
 
 export const AllRoutes = [
   {
@@ -34,6 +35,10 @@ export const AllRoutes = [
           {
             path: "/history-appointments",
             element: <HistoryAppointments />,
+          },
+          {
+            path: "/appointment/:id",
+            element: <Appointment />,
           },
         ],
       },

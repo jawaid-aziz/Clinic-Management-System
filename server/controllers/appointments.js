@@ -83,8 +83,35 @@ async function historyAppointments(req, res) {
   }
 }
 
+async function getAppointmentData(req, res) {
+  try {
+    const { id } = req.params;
+
+    const appointment = await Appointment.findById(id);
+    if (!appointment) {
+      return res.status(404).json({
+        success: false,
+        message: "Appointment not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: appointment,
+    });
+  } catch (error) {
+    console.error("Error fetching appointment data:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch appointment data",
+      error: error.message,
+    });
+  }
+}
+
 module.exports = {
   addAppointment,
   pendingAppointments,
   historyAppointments,
+  getAppointmentData,
 };
