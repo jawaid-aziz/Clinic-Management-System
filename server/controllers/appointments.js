@@ -4,6 +4,47 @@ const fs = require("fs");
 const multer = require("multer");
 const Prescription = require("../models/Prescription");
 
+// Search by MRN, Name, or Phone
+async function searchAppointment(req, res) {
+   try {
+    const { query } = req.query  // string input from frontend
+
+    if (!query) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide an MRN, name, or phone number.",
+      })
+    }
+
+    // Case-insensitive search for name, exact match for MRN and phone
+    const appointments = await Appointment.find({
+      $or: [
+        { mrn: { $regex: query, $options: "i" } },
+        { phone: { $regex: query, $options: "i" } },
+        { name: { $regex: query, $options: "i" } }, // i = case-insensitive
+      ],
+    })
+
+    if (appointments.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No appointment found with the given input.",
+      })
+    }
+
+    res.json({
+      success: true,
+      data: appointments,
+    })
+  } catch (error) {
+    console.error("Error searching appointment:", error)
+    res.status(500).json({
+      success: false,
+      message: "Server error while searching for appointment.",
+    })
+  }
+}
+
 // Add a new appointment
 async function addAppointment(req, res) {
   try {
@@ -228,4 +269,5 @@ module.exports = {
   getAppointmentData,
   uploadPrescription,
   upload,
+  searchAppointment
 };
