@@ -94,22 +94,22 @@ export const Appointment = () => {
     }
   };
 
-const handleGeneratePrescription = async () => {
-  if (!docxContent || !appointment) {
-    alert("Please choose a template and make sure appointment is loaded.");
-    return;
-  }
+  const handleGeneratePrescription = async () => {
+    if (!docxContent || !appointment) {
+      alert("Please choose a template and make sure appointment is loaded.");
+      return;
+    }
 
-  const element = document.createElement("div");
-  element.style.paddingTop = "120px";   
-  element.style.paddingBottom = "120px"; 
-  element.style.fontFamily = "Arial, sans-serif";
-  element.style.fontSize = "10pt";
-  element.style.lineHeight = "1.2";
-  element.style.maxHeight = "1000px"; 
-  element.style.overflow = "hidden"; 
+    const element = document.createElement("div");
+    element.style.paddingTop = "120px";
+    element.style.paddingBottom = "120px";
+    element.style.fontFamily = "Arial, sans-serif";
+    element.style.fontSize = "10pt";
+    element.style.lineHeight = "1.2";
+    element.style.maxHeight = "1000px";
+    element.style.overflow = "hidden";
 
-  element.innerHTML = `
+    element.innerHTML = `
     <style>
       * { background-color: transparent !important; }
       p { margin-top: 2px !important; margin-bottom: 2px !important; }
@@ -119,7 +119,9 @@ const handleGeneratePrescription = async () => {
       <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap: 8px; font-size:10pt;">
         <p><strong>Doctor:</strong> ${appointment.doctor}</p>
         <p><strong>Status:</strong> ${appointment.status}</p>
-        <p><strong>Date:</strong> ${new Date(appointment.date).toLocaleDateString()}</p>
+        <p><strong>Date:</strong> ${new Date(
+          appointment.date
+        ).toLocaleDateString()}</p>
         <p><strong>Time In:</strong> ${timeIn}</p>
         <p><strong>Time Out:</strong> ${timeOut}</p>
         <p><strong>Phone:</strong> ${appointment.phone}</p>
@@ -139,43 +141,54 @@ const handleGeneratePrescription = async () => {
     </div>
   `;
 
-  // Generate PDF as Blob
-  const worker = html2pdf().from(element).set({
-    margin: [10, 15, 10, 15],
-    html2canvas: { scale: 2 },
-    jsPDF: { unit: "mm", format: "a4", orientation: "portrait" }
-  }).toPdf();
+    // Generate PDF as Blob
+    const worker = html2pdf()
+      .from(element)
+      .set({
+        margin: [10, 15, 10, 15],
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+      })
+      .toPdf();
 
-  worker.get("pdf").then(async (pdf) => {
-    const pdfBlob = new Blob([pdf.output("arraybuffer")], { type: "application/pdf" });
-
-    // Create form data
-    const formData = new FormData();
-    formData.append("mrn", appointment.mrn); // backend uses this for filename
-    formData.append("file", pdfBlob, `${appointment.mrn}.pdf`);
-
-    try {
-      const res = await fetch("http://localhost:8000/api/appointments/prescription", {
-        method: "POST",
-        body: formData,
+    worker.get("pdf").then(async (pdf) => {
+      const pdfBlob = new Blob([pdf.output("arraybuffer")], {
+        type: "application/pdf",
       });
 
-      const data = await res.json();
-      if (data.success) {
-        alert("Prescription saved on server successfully!");
-        // Optional: also open in new tab for print
-        const url = URL.createObjectURL(pdfBlob);
-        window.open(url, "_blank");
-      } else {
-        alert(data.message || "Failed to save prescription.");
-      }
-    } catch (err) {
-      console.error("Error uploading prescription:", err);
-      alert("Error uploading prescription.");
-    }
-  });
-};
+      // Create form data
+      const formData = new FormData();
+      formData.append("mrn", appointment.mrn); // backend uses this for filename
+      formData.append("file", pdfBlob, `${appointment.mrn}.pdf`);
 
+      // ⬇️ Send template name too
+      if (selectedTemplate) {
+        formData.append("templateName", selectedTemplate.name);
+      }
+      try {
+        const res = await fetch(
+          "http://localhost:8000/api/appointments/prescription",
+          {
+            method: "POST",
+            body: formData,
+          }
+        );
+
+        const data = await res.json();
+        if (data.success) {
+          alert("Prescription saved on server successfully!");
+          // Optional: also open in new tab for print
+          const url = URL.createObjectURL(pdfBlob);
+          window.open(url, "_blank");
+        } else {
+          alert(data.message || "Failed to save prescription.");
+        }
+      } catch (err) {
+        console.error("Error uploading prescription:", err);
+        alert("Error uploading prescription.");
+      }
+    });
+  };
 
   if (loading) {
     return (

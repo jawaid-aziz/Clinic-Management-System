@@ -6,7 +6,7 @@ const Prescription = require("../models/Prescription");
 
 // Search by MRN, Name, or Phone
 async function searchAppointment(req, res) {
-   try {
+  try {
     const { query } = req.query  // string input from frontend
 
     if (!query) {
@@ -211,7 +211,15 @@ const storage = multer.diskStorage({
     if (!mrn) {
       return cb(new Error("MRN is required"), null);
     }
-    cb(null, `${mrn}.pdf`); // unique file name
+
+    const filePath = path.join(prescriptionsDir, `${mrn}.pdf`);
+
+    // ✅ If file exists, delete it first
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
+
+    cb(null, `${mrn}.pdf`);
   },
 });
 
@@ -228,7 +236,8 @@ const upload = multer({ storage, fileFilter });
 // Controller to handle prescription upload
 async function uploadPrescription(req, res) {
   try {
-    const { mrn } = req.body;
+    const { mrn, templateName } = req.body;
+
 
     if (!req.file) {
       return res.status(400).json({
@@ -245,6 +254,13 @@ async function uploadPrescription(req, res) {
     });
 
     await prescription.save();
+
+    // ⬇️ Update appointment with the template used
+    await Appointment.findOneAndUpdate(
+      { mrn },
+      { template: templateName, status: "Completed" }, // also mark appointment as Completed
+      { new: true }
+    );
 
     res.status(200).json({
       success: true,

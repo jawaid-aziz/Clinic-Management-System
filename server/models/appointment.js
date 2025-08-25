@@ -75,6 +75,10 @@ const appointmentSchema = new mongoose.Schema({
     enum: ["Pending", "Completed", "Cancelled"], // restrict to known values
     default: "Pending", // default status
   },
+  template: {
+    type: String,
+    default: "",
+  },
 });
 
 const Appointment = mongoose.model("Appointment", appointmentSchema);

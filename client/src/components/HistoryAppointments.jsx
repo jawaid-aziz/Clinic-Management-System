@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -19,6 +19,8 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import html2pdf from "html2pdf.js";
+import { renderAsync } from "docx-preview";
 
 export const HistoryAppointments = () => {
   // ✅ Initialize with today's date (formatted YYYY-MM-DD)
@@ -30,6 +32,14 @@ export const HistoryAppointments = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [open, setOpen] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
+  const [selectedTemplate, setSelectedTemplate] = useState(null);
+  const [docxContent, setDocxContent] = useState(null);
+
+  // Ref to trigger hidden input
+  const fileInputRef = useRef(null);
+
+  const [timeIn, setTimeIn] = useState("");
+  const [timeOut, setTimeOut] = useState("");
 
   const handleOpenAppointment = (appointment) => {
     setSelectedAppointment(appointment);
@@ -96,6 +106,145 @@ export const HistoryAppointments = () => {
     }
   };
 
+  const handleSaveTimes = async (id) => {
+    try {
+      const res = await fetch(
+        `http://localhost:8000/api/appointments/${id}/time`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ timeIn, timeOut }),
+        }
+      );
+
+      const data = await res.json();
+      if (data.success) {
+        alert("Times updated successfully!");
+      } else {
+        alert(data.message || "Failed to update times");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Something went wrong while saving times.");
+    }
+  };
+
+  const handleChooseTemplate = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (event) => {
+    const file = event.target.files[0];
+    if (file && file.name.endsWith(".docx")) {
+      setSelectedTemplate(file);
+
+      const arrayBuffer = await file.arrayBuffer();
+      const container = document.createElement("div");
+      container.style.fontFamily = "Arial, sans-serif";
+      await renderAsync(arrayBuffer, container);
+
+      setDocxContent(container.innerHTML);
+    } else {
+      alert("Please select a valid .docx file");
+    }
+  };
+
+    const handleGeneratePrescription = async () => {
+      if (!docxContent || !selectedAppointment) {
+        alert("Please choose a template and make sure appointment is loaded.");
+        return;
+      }
+  
+      const element = document.createElement("div");
+      element.style.paddingTop = "120px";
+      element.style.paddingBottom = "120px";
+      element.style.fontFamily = "Arial, sans-serif";
+      element.style.fontSize = "10pt";
+      element.style.lineHeight = "1.2";
+      element.style.maxHeight = "1000px";
+      element.style.overflow = "hidden";
+  
+      element.innerHTML = `
+      <style>
+        * { background-color: transparent !important; }
+        p { margin-top: 2px !important; margin-bottom: 2px !important; }
+        div { margin-top: 0 !important; }
+      </style>
+      <div style="max-width:700px; margin:auto;">
+        <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap: 8px; font-size:10pt;">
+          <p><strong>Doctor:</strong> ${selectedAppointment.doctor}</p>
+          <p><strong>Status:</strong> ${selectedAppointment.status}</p>
+          <p><strong>Date:</strong> ${new Date(
+            selectedAppointment.date
+          ).toLocaleDateString()}</p>
+          <p><strong>Time In:</strong> ${timeIn}</p>
+          <p><strong>Time Out:</strong> ${timeOut}</p>
+          <p><strong>Phone:</strong> ${selectedAppointment.phone}</p>
+          <p><strong>CNIC:</strong> ${selectedAppointment.cnic}</p>
+          <p><strong>Gestation:</strong> ${selectedAppointment.gestation}</p>
+          <p><strong>Height:</strong> ${selectedAppointment.height} cm</p>
+          <p><strong>Weight:</strong> ${selectedAppointment.weight} kg</p>
+          <p><strong>BP:</strong> ${selectedAppointment.bp}</p>
+          <p><strong>Pulse:</strong> ${selectedAppointment.pulse}</p>
+          <p><strong>Temperature:</strong> ${selectedAppointment.temperature} °C</p>
+          <p><strong>VCO:</strong> ${selectedAppointment.vco ? "Yes" : "No"}</p>
+        </div>
+        <hr style="margin: 12px 0;" />
+        <div style="font-size:10pt; line-height:1.2;">
+          ${docxContent}
+        </div>
+      </div>
+    `;
+  
+      // Generate PDF as Blob
+      const worker = html2pdf()
+        .from(element)
+        .set({
+          margin: [10, 15, 10, 15],
+          html2canvas: { scale: 2 },
+          jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+        })
+        .toPdf();
+  
+      worker.get("pdf").then(async (pdf) => {
+        const pdfBlob = new Blob([pdf.output("arraybuffer")], {
+          type: "application/pdf",
+        });
+  
+        // Create form data
+        const formData = new FormData();
+        formData.append("mrn", selectedAppointment.mrn); // backend uses this for filename
+        formData.append("file", pdfBlob, `${selectedAppointment.mrn}.pdf`);
+
+        // ⬇️ Send template name too
+        if (selectedTemplate) {
+          formData.append("templateName", selectedTemplate.name);
+        }
+        try {
+          const res = await fetch(
+            "http://localhost:8000/api/appointments/prescription",
+            {
+              method: "POST",
+              body: formData,
+            }
+          );
+  
+          const data = await res.json();
+          if (data.success) {
+            alert("Prescription saved on server successfully!");
+            // Optional: also open in new tab for print
+            const url = URL.createObjectURL(pdfBlob);
+            window.open(url, "_blank");
+          } else {
+            alert(data.message || "Failed to save prescription.");
+          }
+        } catch (err) {
+          console.error("Error uploading prescription:", err);
+          alert("Error uploading prescription.");
+        }
+      });
+    };
+
   return (
     <div className="p-6 max-w-3xl mx-auto space-y-4">
       <Card>
@@ -154,7 +303,11 @@ export const HistoryAppointments = () => {
                   <TableRow
                     key={idx}
                     className="cursor-pointer hover:shadow-lg transition"
-                    onClick={() => handleOpenAppointment(appt)}
+                    onClick={() => {
+                      handleOpenAppointment(appt);
+                      setTimeIn(appt.timeIn);
+                      setTimeOut(appt.timeOut);
+                    }}
                   >
                     <TableCell>{appt.name || "N/A"}</TableCell>
                     <TableCell>
@@ -170,44 +323,164 @@ export const HistoryAppointments = () => {
         </Card>
       )}
 
-      {/* Overlay Pop-up */}
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
+        <DialogContent className="max-w-2xl h-[90vh] flex flex-col">
+          <DialogHeader className="shrink-0">
             <DialogTitle>Appointment Details</DialogTitle>
             <DialogDescription>
               Full details of the selected appointment
             </DialogDescription>
           </DialogHeader>
+
           {selectedAppointment && (
-            <div className="space-y-2">
+            <div className="grid grid-cols-2 gap-4 text-sm flex-1 overflow-y-auto pr-2">
+              <div>
+                <Label>MRN:</Label>
+                <p>{selectedAppointment.mrn}</p>
+              </div>
               <div>
                 <Label>Name:</Label>
                 <p>{selectedAppointment.name}</p>
               </div>
               <div>
+                <Label>Sex:</Label>
+                <p>{selectedAppointment.sex}</p>
+              </div>
+              <div>
+                <Label>Age:</Label>
+                <p>{selectedAppointment.age}</p>
+              </div>
+              <div>
                 <Label>Date:</Label>
-                <p>{selectedAppointment.date}</p>
+                <p>{new Date(selectedAppointment.date).toLocaleDateString()}</p>
               </div>
               <div>
-                <Label>Time In:</Label>
-                <p>{selectedAppointment.timeIn}</p>
+                <Label>Status:</Label>
+                <p>{selectedAppointment.status}</p>
               </div>
               <div>
-                <Label>Time Out:</Label>
-                <p>{selectedAppointment.timeOut}</p>
+                <Label>Doctor:</Label>
+                <p>{selectedAppointment.doctor}</p>
+              </div>
+              <div>
+                <Label>CNIC:</Label>
+                <p>{selectedAppointment.cnic}</p>
               </div>
               <div>
                 <Label>Phone:</Label>
                 <p>{selectedAppointment.phone}</p>
               </div>
               <div>
-                <Label>Email:</Label>
-                <p>{selectedAppointment.email}</p>
+                <Label>Gestation:</Label>
+                <p>{selectedAppointment.gestation || "N/A"}</p>
               </div>
               <div>
-                <Label>Notes:</Label>
-                <p>{selectedAppointment.notes || "No notes provided."}</p>
+                <Label>Height:</Label>
+                <p>
+                  {selectedAppointment.height
+                    ? `${selectedAppointment.height} cm`
+                    : "N/A"}
+                </p>
+              </div>
+              <div>
+                <Label>Weight:</Label>
+                <p>
+                  {selectedAppointment.weight
+                    ? `${selectedAppointment.weight} kg`
+                    : "N/A"}
+                </p>
+              </div>
+              <div>
+                <Label>BP:</Label>
+                <p>{selectedAppointment.bp || "N/A"}</p>
+              </div>
+              <div>
+                <Label>Pulse:</Label>
+                <p>
+                  {selectedAppointment.pulse
+                    ? `${selectedAppointment.pulse} bpm`
+                    : "N/A"}
+                </p>
+              </div>
+              <div>
+                <Label>Temperature:</Label>
+                <p>
+                  {selectedAppointment.temperature
+                    ? `${selectedAppointment.temperature} °C`
+                    : "N/A"}
+                </p>
+              </div>
+              <div>
+                <Label>VCO:</Label>
+                <p>{selectedAppointment.vco ? "Yes" : "No"}</p>
+              </div>
+              <div>
+                <Label>Template Used:</Label>
+                <p>{selectedAppointment.template || "N/A"}</p>
+              </div>
+              <div>
+                <Label>Time In:</Label>
+                <p>{selectedAppointment.timeIn || "N/A"}</p>
+              </div>
+              <div>
+                <Label>Time Out:</Label>
+                <p>{selectedAppointment.timeOut || "N/A"}</p>
+              </div>
+            </div>
+          )}
+
+          {/* Editable Times Section */}
+          {selectedAppointment && (
+            <div className="mt-4 ">
+              <h4 className="font-semibold text-sm mb-2">Update Times</h4>
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <label className="block text-xs font-semibold mb-1">
+                    Time In
+                  </label>
+                  <input
+                    type="time"
+                    value={timeIn}
+                    onChange={(e) => setTimeIn(e.target.value)}
+                    className="border rounded px-2 py-1 w-full text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold mb-1">
+                    Time Out
+                  </label>
+                  <input
+                    type="time"
+                    value={timeOut}
+                    onChange={(e) => setTimeOut(e.target.value)}
+                    className="border rounded px-2 py-1 w-full text-sm"
+                  />
+                </div>
+              </div>
+              <div className="flex justify-between gap-2 mt-3">
+                <Button
+                  onClick={() => handleSaveTimes(selectedAppointment._id)}
+                >
+                  Save Times
+                </Button>
+                <div className="flex gap-2">
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileChange}
+                    accept=".doc,.docx"
+                    className="hidden"
+                  />
+                  <Button variant="outline" onClick={handleChooseTemplate}>
+                    Choose Template
+                  </Button>
+                  <Button onClick={handleGeneratePrescription}>Save Prescription</Button>
+                  {selectedTemplate && (
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Selected: {selectedTemplate.name}
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
           )}
