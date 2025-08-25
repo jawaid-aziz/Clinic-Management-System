@@ -285,6 +285,52 @@ async function uploadPrescription(req, res) {
   }
 }
 
+// Controller to open prescription file in new tab
+async function getPrescription(req, res) {
+  try {
+    const { mrn } = req.params; // assuming route is /prescription/:mrn
+
+    if (!mrn) {
+      return res.status(400).json({
+        success: false,
+        message: "MRN is required",
+      });
+    }
+
+    // Check DB
+    const prescription = await Prescription.findOne({ mrn });
+    if (!prescription) {
+      return res.status(404).json({
+        success: false,
+        message: "Prescription not found in database",
+      });
+    }
+
+    // Build file path
+    const filePath = path.join(__dirname, "../Prescriptions", prescription.fileName);
+
+    // Check if file exists on disk
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({
+        success: false,
+        message: "Prescription file not found on server",
+      });
+    }
+
+// ✅ Explicitly set inline viewing
+res.type("pdf");
+res.setHeader("Content-Disposition", `inline; filename="${prescription.fileName}"`);
+return res.sendFile(filePath);
+  } catch (error) {
+    console.error("Error fetching prescription:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch prescription",
+      error: error.message,
+    });
+  }
+}
+
 module.exports = {
   addAppointment,
   pendingAppointments,
@@ -293,5 +339,6 @@ module.exports = {
   getAppointmentData,
   uploadPrescription,
   upload,
-  searchAppointment
+  searchAppointment,
+  getPrescription
 };

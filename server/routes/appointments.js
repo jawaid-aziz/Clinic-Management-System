@@ -7,7 +7,8 @@ const { addAppointment,
     updateAppointmentTime,
     uploadPrescription,
     upload,
-    searchAppointment
+    searchAppointment,
+    getPrescription
 } = require('../controllers/appointments');
 
 router.post("/add", addAppointment);
@@ -18,5 +19,6 @@ router.get("/:id", getAppointmentData);
 router.put("/:id/time", updateAppointmentTime);
 router.post("/prescription", upload.single("file"), uploadPrescription);
 router.get("/search", searchAppointment);
+router.get("/openPrescription/:mrn", getPrescription);
 
 module.exports = router;

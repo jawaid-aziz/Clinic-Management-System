@@ -250,6 +250,21 @@ export const HistoryAppointments = () => {
     });
   };
 
+  const handleViewPrescription = async (mrn) => {
+  try {
+    if (!mrn) {
+      alert("MRN is missing");
+      return;
+    }
+
+    // Open in new tab directly
+    window.open(`http://localhost:8000/api/appointments/openPrescription/${mrn}`, "_blank");
+  } catch (error) {
+    console.error("Error opening prescription:", error);
+    alert("Failed to open prescription");
+  }
+};
+
   return (
     <div className="p-6 max-w-3xl mx-auto space-y-4">
       <Card>
@@ -498,6 +513,16 @@ export const HistoryAppointments = () => {
                     </p>
                   )}
                 </div>
+              </div>
+              {/* ✅ New button to view prescription */}
+              <div className="pt-3 justify-center align-middle flex">
+                <Button
+                  onClick={() =>
+                    handleViewPrescription(selectedAppointment.mrn)
+                  }
+                >
+                  View Prescription
+                </Button>
               </div>
             </div>
           )}

@@ -119,8 +119,10 @@ export const Appointment = () => {
     </style>
     <div style="max-width:700px; margin:auto;">
       <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap: 8px; font-size:10pt;">
-        <p><strong>Doctor:</strong> ${appointment.doctor}</p>
-        <p><strong>Status:</strong> ${appointment.status}</p>
+        <p><strong>Name:</strong> ${appointment.name}</p>
+        <p><strong>Sex:</strong> ${appointment.sex}</p>
+        <p><strong>Age:</strong> ${appointment.age}</p>
+        <p><strong>Department:</strong> ${appointment.doctor}</p>
         <p><strong>Date:</strong> ${new Date(
           appointment.date
         ).toLocaleDateString()}</p>
