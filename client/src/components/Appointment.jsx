@@ -7,6 +7,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import html2pdf from "html2pdf.js";
 import { renderAsync } from "docx-preview";
+import { useNavigate } from "react-router-dom";
 
 export const Appointment = () => {
   const { id } = useParams();
@@ -18,6 +19,7 @@ export const Appointment = () => {
 
   const [timeIn, setTimeIn] = useState("");
   const [timeOut, setTimeOut] = useState("");
+  const navigate = useNavigate();
 
   // Ref to trigger hidden input
   const fileInputRef = useRef(null);
@@ -95,10 +97,10 @@ export const Appointment = () => {
   };
 
   const handleGeneratePrescription = async () => {
-    if (!docxContent || !appointment) {
-      alert("Please choose a template and make sure appointment is loaded.");
-      return;
-    }
+    // if (!docxContent || !appointment) {
+    //   alert("Please choose a template and make sure appointment is loaded.");
+    //   return;
+    // }
 
     const element = document.createElement("div");
     element.style.paddingTop = "120px";
@@ -180,6 +182,7 @@ export const Appointment = () => {
           // Optional: also open in new tab for print
           const url = URL.createObjectURL(pdfBlob);
           window.open(url, "_blank");
+          navigate("/pending-appointments");
         } else {
           alert(data.message || "Failed to save prescription.");
         }

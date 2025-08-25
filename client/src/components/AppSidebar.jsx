@@ -76,7 +76,7 @@ export function AppSidebar({ role }) {
       <SidebarContent className="bg-cornflower-blue-300">
         <SidebarGroup>
           <SidebarGroupLabel className="text-sm text-l">
-            Clinic Management System
+            Family Care Hospital
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>

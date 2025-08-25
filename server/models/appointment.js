@@ -45,6 +45,9 @@ const appointmentSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  address: {
+    type: String,
+  },
   weight: {
     type: Number, // kg
     min: 0,

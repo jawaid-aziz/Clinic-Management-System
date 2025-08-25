@@ -72,10 +72,18 @@ async function addAppointment(req, res) {
 // Get all pending appointments
 async function pendingAppointments(req, res) {
   try {
-    const appointments = await Appointment.find({ status: "Pending" }).sort({
-      date: 1, // earliest first
-      timeIn: 1,
-    });
+  const { role } = req.query; // role will come from frontend query param
+
+  // Build filter dynamically
+  const filter = { status: "Pending" };
+if (role === "gynae" || role === "paediatrics") {
+  filter.doctor = role; // assuming Appointment schema has "doctor"
+}
+
+  const appointments = await Appointment.find(filter).sort({
+    date: 1,
+    timeIn: 1,
+  });
 
     res.status(200).json({
       success: true,

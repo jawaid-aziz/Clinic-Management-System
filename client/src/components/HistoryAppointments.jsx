@@ -149,22 +149,22 @@ export const HistoryAppointments = () => {
     }
   };
 
-    const handleGeneratePrescription = async () => {
-      if (!docxContent || !selectedAppointment) {
-        alert("Please choose a template and make sure appointment is loaded.");
-        return;
-      }
-  
-      const element = document.createElement("div");
-      element.style.paddingTop = "120px";
-      element.style.paddingBottom = "120px";
-      element.style.fontFamily = "Arial, sans-serif";
-      element.style.fontSize = "10pt";
-      element.style.lineHeight = "1.2";
-      element.style.maxHeight = "1000px";
-      element.style.overflow = "hidden";
-  
-      element.innerHTML = `
+  const handleGeneratePrescription = async () => {
+    if (!docxContent || !selectedAppointment) {
+      alert("Please choose a template and make sure appointment is loaded.");
+      return;
+    }
+
+    const element = document.createElement("div");
+    element.style.paddingTop = "120px";
+    element.style.paddingBottom = "120px";
+    element.style.fontFamily = "Arial, sans-serif";
+    element.style.fontSize = "10pt";
+    element.style.lineHeight = "1.2";
+    element.style.maxHeight = "1000px";
+    element.style.overflow = "hidden";
+
+    element.innerHTML = `
       <style>
         * { background-color: transparent !important; }
         p { margin-top: 2px !important; margin-bottom: 2px !important; }
@@ -181,12 +181,17 @@ export const HistoryAppointments = () => {
           <p><strong>Time Out:</strong> ${timeOut}</p>
           <p><strong>Phone:</strong> ${selectedAppointment.phone}</p>
           <p><strong>CNIC:</strong> ${selectedAppointment.cnic}</p>
+                    <p><strong>Address:</strong> ${
+                      selectedAppointment.address
+                    }</p>
           <p><strong>Gestation:</strong> ${selectedAppointment.gestation}</p>
           <p><strong>Height:</strong> ${selectedAppointment.height} cm</p>
           <p><strong>Weight:</strong> ${selectedAppointment.weight} kg</p>
           <p><strong>BP:</strong> ${selectedAppointment.bp}</p>
           <p><strong>Pulse:</strong> ${selectedAppointment.pulse}</p>
-          <p><strong>Temperature:</strong> ${selectedAppointment.temperature} °C</p>
+          <p><strong>Temperature:</strong> ${
+            selectedAppointment.temperature
+          } °C</p>
           <p><strong>VCO:</strong> ${selectedAppointment.vco ? "Yes" : "No"}</p>
         </div>
         <hr style="margin: 12px 0;" />
@@ -195,55 +200,55 @@ export const HistoryAppointments = () => {
         </div>
       </div>
     `;
-  
-      // Generate PDF as Blob
-      const worker = html2pdf()
-        .from(element)
-        .set({
-          margin: [10, 15, 10, 15],
-          html2canvas: { scale: 2 },
-          jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
-        })
-        .toPdf();
-  
-      worker.get("pdf").then(async (pdf) => {
-        const pdfBlob = new Blob([pdf.output("arraybuffer")], {
-          type: "application/pdf",
-        });
-  
-        // Create form data
-        const formData = new FormData();
-        formData.append("mrn", selectedAppointment.mrn); // backend uses this for filename
-        formData.append("file", pdfBlob, `${selectedAppointment.mrn}.pdf`);
 
-        // ⬇️ Send template name too
-        if (selectedTemplate) {
-          formData.append("templateName", selectedTemplate.name);
-        }
-        try {
-          const res = await fetch(
-            "http://localhost:8000/api/appointments/prescription",
-            {
-              method: "POST",
-              body: formData,
-            }
-          );
-  
-          const data = await res.json();
-          if (data.success) {
-            alert("Prescription saved on server successfully!");
-            // Optional: also open in new tab for print
-            const url = URL.createObjectURL(pdfBlob);
-            window.open(url, "_blank");
-          } else {
-            alert(data.message || "Failed to save prescription.");
-          }
-        } catch (err) {
-          console.error("Error uploading prescription:", err);
-          alert("Error uploading prescription.");
-        }
+    // Generate PDF as Blob
+    const worker = html2pdf()
+      .from(element)
+      .set({
+        margin: [10, 15, 10, 15],
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+      })
+      .toPdf();
+
+    worker.get("pdf").then(async (pdf) => {
+      const pdfBlob = new Blob([pdf.output("arraybuffer")], {
+        type: "application/pdf",
       });
-    };
+
+      // Create form data
+      const formData = new FormData();
+      formData.append("mrn", selectedAppointment.mrn); // backend uses this for filename
+      formData.append("file", pdfBlob, `${selectedAppointment.mrn}.pdf`);
+
+      // ⬇️ Send template name too
+      if (selectedTemplate) {
+        formData.append("templateName", selectedTemplate.name);
+      }
+      try {
+        const res = await fetch(
+          "http://localhost:8000/api/appointments/prescription",
+          {
+            method: "POST",
+            body: formData,
+          }
+        );
+
+        const data = await res.json();
+        if (data.success) {
+          alert("Prescription saved on server successfully!");
+          // Optional: also open in new tab for print
+          const url = URL.createObjectURL(pdfBlob);
+          window.open(url, "_blank");
+        } else {
+          alert(data.message || "Failed to save prescription.");
+        }
+      } catch (err) {
+        console.error("Error uploading prescription:", err);
+        alert("Error uploading prescription.");
+      }
+    });
+  };
 
   return (
     <div className="p-6 max-w-3xl mx-auto space-y-4">
@@ -292,10 +297,13 @@ export const HistoryAppointments = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Patient</TableHead>
+                  <TableHead>MRN</TableHead>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Department</TableHead>
                   <TableHead>Date</TableHead>
-                  <TableHead>Time In</TableHead>
-                  <TableHead>Doctor</TableHead>
+                  <TableHead>TimeIn</TableHead>
+                  <TableHead>TimeOut</TableHead>
+                  <TableHead>Status</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -309,12 +317,15 @@ export const HistoryAppointments = () => {
                       setTimeOut(appt.timeOut);
                     }}
                   >
+                    <TableCell>{appt.mrn || "N/A"}</TableCell>
                     <TableCell>{appt.name || "N/A"}</TableCell>
+                    <TableCell>{appt.doctor || "N/A"}</TableCell>
                     <TableCell>
                       {new Date(appt.date).toLocaleDateString()}
                     </TableCell>
                     <TableCell>{appt.timeIn || "N/A"}</TableCell>
-                    <TableCell>{appt.doctor || "N/A"}</TableCell>
+                    <TableCell>{appt.timeOut || "N/A"}</TableCell>
+                    <TableCell>{appt.status || "N/A"}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -359,7 +370,7 @@ export const HistoryAppointments = () => {
                 <p>{selectedAppointment.status}</p>
               </div>
               <div>
-                <Label>Doctor:</Label>
+                <Label>Department:</Label>
                 <p>{selectedAppointment.doctor}</p>
               </div>
               <div>
@@ -369,6 +380,10 @@ export const HistoryAppointments = () => {
               <div>
                 <Label>Phone:</Label>
                 <p>{selectedAppointment.phone}</p>
+              </div>
+              <div>
+                <Label>Address:</Label>
+                <p>{selectedAppointment.address}</p>
               </div>
               <div>
                 <Label>Gestation:</Label>
@@ -474,7 +489,9 @@ export const HistoryAppointments = () => {
                   <Button variant="outline" onClick={handleChooseTemplate}>
                     Choose Template
                   </Button>
-                  <Button onClick={handleGeneratePrescription}>Save Prescription</Button>
+                  <Button onClick={handleGeneratePrescription}>
+                    Save Prescription
+                  </Button>
                   {selectedTemplate && (
                     <p className="text-xs text-muted-foreground mt-2">
                       Selected: {selectedTemplate.name}

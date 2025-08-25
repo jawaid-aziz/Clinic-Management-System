@@ -33,8 +33,8 @@ export const Header = ({ role }) => {
       <div>
         <h1 className="text-2xl font-semibold text-gray-800 tracking-wide">
           {role === "reception" && "Reception"}
-          {role === "paeds" && "Paediatrics"}
-          {role === "gynae" && "Gynaecology"}
+          {role === "paediatrics" && "Paediatrics"}
+          {role === "gynae" && "Gynae"}
         </h1>
       </div>
 

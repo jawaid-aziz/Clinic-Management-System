@@ -6,6 +6,7 @@ import { AddAppointment } from "./components/AddAppointment";
 import { PendingAppointments } from "./components/PendingAppointments";
 import { HistoryAppointments } from "./components/HistoryAppointments";
 import { Appointment } from "./components/Appointment";
+import { Settings } from "./components/Settings";
 
 export const AllRoutes = [
   {
@@ -39,6 +40,10 @@ export const AllRoutes = [
           {
             path: "/appointment/:id",
             element: <Appointment />,
+          },
+          {
+            path: "/settings",
+            element: <Settings />,
           },
         ],
       },

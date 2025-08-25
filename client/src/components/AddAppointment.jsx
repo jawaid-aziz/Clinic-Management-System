@@ -25,6 +25,7 @@ export const AddAppointment = () => {
     doctor: "",
     cnic: "",
     phone: "",
+    address: "",
     weight: "",
     height: "",
     bp: "",
@@ -40,32 +41,30 @@ export const AddAppointment = () => {
 
   const handleSubmit = async () => {
     try {
-      const res = await fetch(
-        "http://localhost:8000/api/appointments/add",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            mrn: form.mrn,
-            name: form.name,
-            sex: form.sex,
-            age: form.age,
-            date: form.date,
-            timeIn: form.timeIn,
-            timeOut: form.timeOut,
-            doctor: form.doctor,
-            cnic: form.cnic,
-            phone: form.phone,
-            height: form.height,
-            weight: form.weight,
-            bp: form.bp,
-            pulse: form.pulse,
-            temperature: form.temperature,
-            vco: form.vco,
-            gestation: form.gestation,
-          }),
-        }
-      );
+      const res = await fetch("http://localhost:8000/api/appointments/add", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          mrn: form.mrn,
+          name: form.name,
+          sex: form.sex,
+          age: form.age,
+          date: form.date,
+          timeIn: form.timeIn,
+          timeOut: form.timeOut,
+          doctor: form.doctor,
+          cnic: form.cnic,
+          phone: form.phone,
+          address: form.address,
+          height: form.height,
+          weight: form.weight,
+          bp: form.bp,
+          pulse: form.pulse,
+          temperature: form.temperature,
+          vco: form.vco,
+          gestation: form.gestation,
+        }),
+      });
 
       const data = await res.json();
 
@@ -82,6 +81,7 @@ export const AddAppointment = () => {
           doctor: "",
           cnic: "",
           phone: "",
+          address: "",
           weight: "",
           height: "",
           bp: "",
@@ -103,7 +103,9 @@ export const AddAppointment = () => {
     <div className="flex justify-center items-center p-6">
       <Card className="w-full max-w-3xl shadow-lg">
         <CardHeader>
-          <CardTitle className="text-xl text-center">Add an Appointment</CardTitle>
+          <CardTitle className="text-xl text-center">
+            Add an Appointment
+          </CardTitle>
         </CardHeader>
 
         <CardContent className="space-y-4">
@@ -204,6 +206,12 @@ export const AddAppointment = () => {
               value={form.phone}
               onChange={(e) => handleChange("phone", e.target.value)}
               placeholder="Enter Contact Number"
+            />
+            <Label>Address</Label>
+            <Input
+              value={form.address}
+              onChange={(e) => handleChange("address", e.target.value)}
+              placeholder="Enter Address"
             />
           </div>
 

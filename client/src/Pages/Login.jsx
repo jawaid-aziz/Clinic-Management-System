@@ -14,7 +14,7 @@ import { useRole } from "@/context/RoleProvider";
 // Hardcoded role-based PINs
 const ROLE_PINS = {
   reception: "1234",
-  paeds: "1234",
+  paediatrics: "1234",
   gynae: "1234",
 };
 
@@ -58,8 +58,8 @@ export const Login = () => {
       <Button onClick={() => handleRoleClick("reception")} className="w-40">
         Reception
       </Button>
-      <Button onClick={() => handleRoleClick("paeds")} className="w-40">
-        Paeds
+      <Button onClick={() => handleRoleClick("paediatrics")} className="w-40">
+        Paediatrics
       </Button>
       <Button onClick={() => handleRoleClick("gynae")} className="w-40">
         Gynae

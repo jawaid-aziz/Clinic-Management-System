@@ -4,20 +4,24 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useRole } from "@/context/RoleProvider";
 
 export const PendingAppointments = () => {
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const { role } = useRole();
 
   // Fetch pending appointments from backend
   useEffect(() => {
     const fetchAppointments = async () => {
       try {
-        const res = await fetch("http://localhost:8000/api/appointments/pending");
+        const res = await fetch(
+          `http://localhost:8000/api/appointments/pending?role=${role}`
+        );
         const data = await res.json();
         setAppointments(data.data || []);
-        console.log(data)
+        console.log(data);
       } catch (error) {
         console.error("Error fetching appointments:", error);
       } finally {
@@ -56,15 +60,29 @@ export const PendingAppointments = () => {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 gap-2 text-sm">
-                <p><strong>Doctor:</strong> {appt.doctor}</p>
-                <p><strong>Date:</strong> {new Date(appt.date).toLocaleDateString()}</p>
-                <p><strong>Time:</strong> {appt.timeIn}</p>
-                <p><strong>Phone:</strong> {appt.phone}</p>
+                <p>
+                  <strong>Department:</strong> {appt.doctor}
+                </p>
+                <p>
+                  <strong>Date:</strong>{" "}
+                  {new Date(appt.date).toLocaleDateString()}
+                </p>
+                <p>
+                  <strong>Time In:</strong> {appt.timeIn}
+                </p>
+                <p>
+                  <strong>Phone:</strong> {appt.phone}
+                </p>
               </div>
 
               <Separator className="my-3" />
 
-              <Button onClick={() => handleStart(appt._id)} className="cursor-pointer">Start</Button>
+              <Button
+                onClick={() => handleStart(appt._id)}
+                className="cursor-pointer"
+              >
+                Start
+              </Button>
             </CardContent>
           </Card>
         ))
