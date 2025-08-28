@@ -126,20 +126,20 @@ const handleGeneratePrescription = async () => {
     <div style="max-width:700px; margin:auto;">
       <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap: 8px; font-size:10pt;">
       <p><strong>MRN:</strong> ${appointment.mrn}</p>
-        <p><strong>Doctor:</strong> ${appointment.name}</p>
-        <p><strong>Status:</strong> ${appointment.age}</p>
-        <p><strong>Gender:</strong> ${appointment.sex}</p>
-        <p><strong>Gender:</strong> ${appointment.phone}</p>
-        <p><strong>Gender:</strong> ${appointment.cnic}</p>
+        <p><strong>Name:</strong> ${appointment.name}</p>
+        <p><strong>Age:</strong> ${appointment.age}</p>
+        <p><strong>Sex:</strong> ${appointment.sex}</p>
+        <p><strong>Phone:</strong> ${appointment.phone}</p>
+        <p><strong>CNIC:</strong> ${appointment.cnic}</p>
         <p><strong>Date:</strong> ${new Date(appointment.date).toLocaleDateString()}</p>
-        <p><strong>Gender:</strong> ${appointment.address}</p>
-        <p><strong>Gender:</strong> ${appointment.height}</p>
-        <p><strong>Gender:</strong> ${appointment.weight}</p>
-        <p><strong>Gender:</strong> ${appointment.bp}</p>
-        <p><strong>Gender:</strong> ${appointment.pulse}</p>
-        <p><strong>Gender:</strong> ${appointment.temperature}</p>
-        <p><strong>Gender:</strong> ${appointment.gestation}</p>
-        <p><strong>Gender:</strong> ${appointment.vco ? "Yes" : "No"}</p>
+        <p><strong>Address:</strong> ${appointment.address}</p>
+        <p><strong>Height:</strong> ${appointment.height}</p>
+        <p><strong>Weight:</strong> ${appointment.weight}</p>
+        <p><strong>BP:</strong> ${appointment.bp}</p>
+        <p><strong>Pulse:</strong> ${appointment.pulse}</p>
+        <p><strong>Temperature:</strong> ${appointment.temperature}</p>
+        <p><strong>Gestation:</strong> ${appointment.gestation}</p>
+        <p><strong>VCO:</strong> ${appointment.vco ? "Yes" : "No"}</p>
         <p><strong>Time In:</strong> ${timeIn}</p>
         <p><strong>Time Out:</strong> ${timeOut}</p>
       </div>

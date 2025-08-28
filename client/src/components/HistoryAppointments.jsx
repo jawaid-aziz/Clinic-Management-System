@@ -179,20 +179,20 @@ const handleGeneratePrescription = async () => {
     <div style="max-width:700px; margin:auto;">
       <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap: 8px; font-size:10pt;">
       <p><strong>MRN:</strong> ${selectedAppointment.mrn}</p>
-        <p><strong>Doctor:</strong> ${selectedAppointment.name}</p>
-        <p><strong>Status:</strong> ${selectedAppointment.age}</p>
-        <p><strong>Gender:</strong> ${selectedAppointment.sex}</p>
-        <p><strong>Gender:</strong> ${selectedAppointment.phone}</p>
-        <p><strong>Gender:</strong> ${selectedAppointment.cnic}</p>
+        <p><strong>Name:</strong> ${selectedAppointment.name}</p>
+        <p><strong>Age:</strong> ${selectedAppointment.age}</p>
+        <p><strong>Sex:</strong> ${selectedAppointment.sex}</p>
+        <p><strong>Phone:</strong> ${selectedAppointment.phone}</p>
+        <p><strong>CNIC:</strong> ${selectedAppointment.cnic}</p>
         <p><strong>Date:</strong> ${new Date(selectedAppointment.date).toLocaleDateString()}</p>
-        <p><strong>Gender:</strong> ${selectedAppointment.address}</p>
-        <p><strong>Gender:</strong> ${selectedAppointment.height}</p>
-        <p><strong>Gender:</strong> ${selectedAppointment.weight}</p>
-        <p><strong>Gender:</strong> ${selectedAppointment.bp}</p>
-        <p><strong>Gender:</strong> ${selectedAppointment.pulse}</p>
-        <p><strong>Gender:</strong> ${selectedAppointment.temperature}</p>
-        <p><strong>Gender:</strong> ${selectedAppointment.gestation}</p>
-        <p><strong>Gender:</strong> ${selectedAppointment.vco ? "Yes" : "No"}</p>
+        <p><strong>Address:</strong> ${selectedAppointment.address}</p>
+        <p><strong>Height:</strong> ${selectedAppointment.height}</p>
+        <p><strong>Weight:</strong> ${selectedAppointment.weight}</p>
+        <p><strong>BP:</strong> ${selectedAppointment.bp}</p>
+        <p><strong>Pulse:</strong> ${selectedAppointment.pulse}</p>
+        <p><strong>Temperature:</strong> ${selectedAppointment.temperature}</p>
+        <p><strong>Gestation:</strong> ${selectedAppointment.gestation}</p>
+        <p><strong>VCO:</strong> ${selectedAppointment.vco ? "Yes" : "No"}</p>
         <p><strong>Time In:</strong> ${timeIn}</p>
         <p><strong>Time Out:</strong> ${timeOut}</p>
       </div>
