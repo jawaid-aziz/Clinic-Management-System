@@ -19,7 +19,8 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import html2pdf from "html2pdf.js";
+import html2canvas from "html2canvas-pro";
+import jsPDF from "jspdf";
 import { renderAsync } from "docx-preview";
 
 export const HistoryAppointments = () => {
@@ -149,106 +150,134 @@ export const HistoryAppointments = () => {
     }
   };
 
-  const handleGeneratePrescription = async () => {
-    if (!docxContent || !selectedAppointment) {
-      alert("Please choose a template and make sure appointment is loaded.");
-      return;
+const handleGeneratePrescription = async () => {
+  if (!docxContent || !selectedAppointment) {
+    alert("Please choose a template and make sure appointment is loaded.");
+    return;
+  }
+
+  // Create hidden container for PDF rendering
+  const hiddenDiv = document.createElement("div");
+  hiddenDiv.style.paddingTop = "120px";
+  hiddenDiv.style.paddingBottom = "120px";
+  hiddenDiv.style.fontFamily = "Arial, sans-serif";
+  hiddenDiv.style.fontSize = "10pt";
+  hiddenDiv.style.lineHeight = "1.2";
+  hiddenDiv.style.maxHeight = "1000px";
+  hiddenDiv.style.overflow = "hidden";
+  hiddenDiv.style.position = "absolute";
+  hiddenDiv.style.top = "0";
+  hiddenDiv.style.left = "-9999px";
+  hiddenDiv.style.visibility = "visible"; // keep it renderable
+
+  hiddenDiv.innerHTML = `
+    <style>
+      * { background-color: transparent !important; }
+      p { margin-top: 2px !important; margin-bottom: 2px !important; }
+      div { margin-top: 0 !important; }
+    </style>
+    <div style="max-width:700px; margin:auto;">
+      <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap: 8px; font-size:10pt;">
+      <p><strong>MRN:</strong> ${selectedAppointment.mrn}</p>
+        <p><strong>Doctor:</strong> ${selectedAppointment.name}</p>
+        <p><strong>Status:</strong> ${selectedAppointment.age}</p>
+        <p><strong>Gender:</strong> ${selectedAppointment.sex}</p>
+        <p><strong>Gender:</strong> ${selectedAppointment.phone}</p>
+        <p><strong>Gender:</strong> ${selectedAppointment.cnic}</p>
+        <p><strong>Date:</strong> ${new Date(selectedAppointment.date).toLocaleDateString()}</p>
+        <p><strong>Gender:</strong> ${selectedAppointment.address}</p>
+        <p><strong>Gender:</strong> ${selectedAppointment.height}</p>
+        <p><strong>Gender:</strong> ${selectedAppointment.weight}</p>
+        <p><strong>Gender:</strong> ${selectedAppointment.bp}</p>
+        <p><strong>Gender:</strong> ${selectedAppointment.pulse}</p>
+        <p><strong>Gender:</strong> ${selectedAppointment.temperature}</p>
+        <p><strong>Gender:</strong> ${selectedAppointment.gestation}</p>
+        <p><strong>Gender:</strong> ${selectedAppointment.vco ? "Yes" : "No"}</p>
+        <p><strong>Time In:</strong> ${timeIn}</p>
+        <p><strong>Time Out:</strong> ${timeOut}</p>
+      </div>
+      <hr style="margin: 12px 0;" />
+      <div style="font-size:10pt; line-height:1.2;">
+        ${docxContent}
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(hiddenDiv);
+
+  try {
+    // Allow rendering
+    await new Promise((resolve) => setTimeout(resolve, 200));
+
+    // Convert to canvas
+    const canvas = await html2canvas(hiddenDiv, {
+      scale: 2,
+      useCORS: true,
+    });
+
+    const imgData = canvas.toDataURL("image/png");
+
+    // Generate A4 PDF
+    const pdf = new jsPDF("p", "mm", "a4");
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+
+    const imgWidth = pageWidth - 20; // leave margin like html2pdf
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+    let heightLeft = imgHeight;
+    let position = 10; // top margin
+
+    pdf.addImage(imgData, "PNG", 10, position, imgWidth, imgHeight);
+    heightLeft -= pageHeight;
+
+    while (heightLeft > 0) {
+      position = heightLeft - imgHeight + 10;
+      pdf.addPage();
+      pdf.addImage(imgData, "PNG", 10, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
     }
 
-    const element = document.createElement("div");
-    element.style.paddingTop = "120px";
-    element.style.paddingBottom = "120px";
-    element.style.fontFamily = "Arial, sans-serif";
-    element.style.fontSize = "10pt";
-    element.style.lineHeight = "1.2";
-    element.style.maxHeight = "1000px";
-    element.style.overflow = "hidden";
-
-    element.innerHTML = `
-      <style>
-        * { background-color: transparent !important; }
-        p { margin-top: 2px !important; margin-bottom: 2px !important; }
-        div { margin-top: 0 !important; }
-      </style>
-      <div style="max-width:700px; margin:auto;">
-        <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap: 8px; font-size:10pt;">
-          <p><strong>Doctor:</strong> ${selectedAppointment.doctor}</p>
-          <p><strong>Status:</strong> ${selectedAppointment.status}</p>
-          <p><strong>Date:</strong> ${new Date(
-            selectedAppointment.date
-          ).toLocaleDateString()}</p>
-          <p><strong>Time In:</strong> ${timeIn}</p>
-          <p><strong>Time Out:</strong> ${timeOut}</p>
-          <p><strong>Phone:</strong> ${selectedAppointment.phone}</p>
-          <p><strong>CNIC:</strong> ${selectedAppointment.cnic}</p>
-                    <p><strong>Address:</strong> ${
-                      selectedAppointment.address
-                    }</p>
-          <p><strong>Gestation:</strong> ${selectedAppointment.gestation}</p>
-          <p><strong>Height:</strong> ${selectedAppointment.height} cm</p>
-          <p><strong>Weight:</strong> ${selectedAppointment.weight} kg</p>
-          <p><strong>BP:</strong> ${selectedAppointment.bp}</p>
-          <p><strong>Pulse:</strong> ${selectedAppointment.pulse}</p>
-          <p><strong>Temperature:</strong> ${
-            selectedAppointment.temperature
-          } °C</p>
-          <p><strong>VCO:</strong> ${selectedAppointment.vco ? "Yes" : "No"}</p>
-        </div>
-        <hr style="margin: 12px 0;" />
-        <div style="font-size:10pt; line-height:1.2;">
-          ${docxContent}
-        </div>
-      </div>
-    `;
-
-    // Generate PDF as Blob
-    const worker = html2pdf()
-      .from(element)
-      .set({
-        margin: [10, 15, 10, 15],
-        html2canvas: { scale: 2 },
-        jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
-      })
-      .toPdf();
-
-    worker.get("pdf").then(async (pdf) => {
-      const pdfBlob = new Blob([pdf.output("arraybuffer")], {
-        type: "application/pdf",
-      });
-
-      // Create form data
-      const formData = new FormData();
-      formData.append("mrn", selectedAppointment.mrn); // backend uses this for filename
-      formData.append("file", pdfBlob, `${selectedAppointment.mrn}.pdf`);
-
-      // ⬇️ Send template name too
-      if (selectedTemplate) {
-        formData.append("templateName", selectedTemplate.name);
-      }
-      try {
-        const res = await fetch(
-          "http://localhost:8000/api/appointments/prescription",
-          {
-            method: "POST",
-            body: formData,
-          }
-        );
-
-        const data = await res.json();
-        if (data.success) {
-          alert("Prescription saved on server successfully!");
-          // Optional: also open in new tab for print
-          const url = URL.createObjectURL(pdfBlob);
-          window.open(url, "_blank");
-        } else {
-          alert(data.message || "Failed to save prescription.");
-        }
-      } catch (err) {
-        console.error("Error uploading prescription:", err);
-        alert("Error uploading prescription.");
-      }
+    // Save blob
+    const pdfBlob = new Blob([pdf.output("arraybuffer")], {
+      type: "application/pdf",
     });
-  };
+
+    // Upload to server
+    const formData = new FormData();
+    formData.append("mrn", selectedAppointment.mrn);
+    formData.append("file", pdfBlob, `${selectedAppointment.mrn}.pdf`);
+
+    if (selectedTemplate) {
+      formData.append("templateName", selectedTemplate.name);
+    }
+
+    const res = await fetch(
+      "http://localhost:8000/api/appointments/prescription",
+      {
+        method: "POST",
+        body: formData,
+      }
+    );
+
+    const data = await res.json();
+    if (data.success) {
+      alert("Prescription saved on server successfully!");
+      const url = URL.createObjectURL(pdfBlob);
+      window.open(url, "_blank");
+    } else {
+      alert(data.message || "Failed to save prescription.");
+    }
+  } catch (err) {
+    console.error("Error generating/uploading prescription:", err);
+    alert("Error generating prescription.");
+  } finally {
+    // Cleanup hidden div
+    document.body.removeChild(hiddenDiv);
+  }
+};
+
+
 
   const handleViewPrescription = async (mrn) => {
   try {

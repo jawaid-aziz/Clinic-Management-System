@@ -5,8 +5,9 @@ import { Separator } from "@/components/ui/separator";
 import { Loader2 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import html2pdf from "html2pdf.js";
 import { renderAsync } from "docx-preview";
+import html2canvas from "html2canvas-pro";
+import jsPDF from "jspdf";
 import { useNavigate } from "react-router-dom";
 
 export const Appointment = () => {
@@ -96,22 +97,27 @@ export const Appointment = () => {
     }
   };
 
-  const handleGeneratePrescription = async () => {
-    // if (!docxContent || !appointment) {
-    //   alert("Please choose a template and make sure appointment is loaded.");
-    //   return;
-    // }
+const handleGeneratePrescription = async () => {
+  if (!appointment) {
+    alert("Make sure appointment is loaded.");
+    return;
+  }
 
-    const element = document.createElement("div");
-    element.style.paddingTop = "120px";
-    element.style.paddingBottom = "120px";
-    element.style.fontFamily = "Arial, sans-serif";
-    element.style.fontSize = "10pt";
-    element.style.lineHeight = "1.2";
-    element.style.maxHeight = "1000px";
-    element.style.overflow = "hidden";
+  // Create hidden container for PDF rendering
+  const hiddenDiv = document.createElement("div");
+  hiddenDiv.style.paddingTop = "120px";
+  hiddenDiv.style.paddingBottom = "120px";
+  hiddenDiv.style.fontFamily = "Arial, sans-serif";
+  hiddenDiv.style.fontSize = "10pt";
+  hiddenDiv.style.lineHeight = "1.2";
+  hiddenDiv.style.maxHeight = "1000px";
+  hiddenDiv.style.overflow = "hidden";
+  hiddenDiv.style.position = "absolute";
+  hiddenDiv.style.top = "0";
+  hiddenDiv.style.left = "-9999px";
+  hiddenDiv.style.visibility = "visible"; // keep it renderable
 
-    element.innerHTML = `
+  hiddenDiv.innerHTML = `
     <style>
       * { background-color: transparent !important; }
       p { margin-top: 2px !important; margin-bottom: 2px !important; }
@@ -119,24 +125,23 @@ export const Appointment = () => {
     </style>
     <div style="max-width:700px; margin:auto;">
       <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap: 8px; font-size:10pt;">
-        <p><strong>Name:</strong> ${appointment.name}</p>
-        <p><strong>Sex:</strong> ${appointment.sex}</p>
-        <p><strong>Age:</strong> ${appointment.age}</p>
-        <p><strong>Department:</strong> ${appointment.doctor}</p>
-        <p><strong>Date:</strong> ${new Date(
-          appointment.date
-        ).toLocaleDateString()}</p>
+      <p><strong>MRN:</strong> ${appointment.mrn}</p>
+        <p><strong>Doctor:</strong> ${appointment.name}</p>
+        <p><strong>Status:</strong> ${appointment.age}</p>
+        <p><strong>Gender:</strong> ${appointment.sex}</p>
+        <p><strong>Gender:</strong> ${appointment.phone}</p>
+        <p><strong>Gender:</strong> ${appointment.cnic}</p>
+        <p><strong>Date:</strong> ${new Date(appointment.date).toLocaleDateString()}</p>
+        <p><strong>Gender:</strong> ${appointment.address}</p>
+        <p><strong>Gender:</strong> ${appointment.height}</p>
+        <p><strong>Gender:</strong> ${appointment.weight}</p>
+        <p><strong>Gender:</strong> ${appointment.bp}</p>
+        <p><strong>Gender:</strong> ${appointment.pulse}</p>
+        <p><strong>Gender:</strong> ${appointment.temperature}</p>
+        <p><strong>Gender:</strong> ${appointment.gestation}</p>
+        <p><strong>Gender:</strong> ${appointment.vco ? "Yes" : "No"}</p>
         <p><strong>Time In:</strong> ${timeIn}</p>
         <p><strong>Time Out:</strong> ${timeOut}</p>
-        <p><strong>Phone:</strong> ${appointment.phone}</p>
-        <p><strong>CNIC:</strong> ${appointment.cnic}</p>
-        <p><strong>Gestation:</strong> ${appointment.gestation}</p>
-        <p><strong>Height:</strong> ${appointment.height} cm</p>
-        <p><strong>Weight:</strong> ${appointment.weight} kg</p>
-        <p><strong>BP:</strong> ${appointment.bp}</p>
-        <p><strong>Pulse:</strong> ${appointment.pulse}</p>
-        <p><strong>Temperature:</strong> ${appointment.temperature} °C</p>
-        <p><strong>VCO:</strong> ${appointment.vco ? "Yes" : "No"}</p>
       </div>
       <hr style="margin: 12px 0;" />
       <div style="font-size:10pt; line-height:1.2;">
@@ -145,55 +150,81 @@ export const Appointment = () => {
     </div>
   `;
 
-    // Generate PDF as Blob
-    const worker = html2pdf()
-      .from(element)
-      .set({
-        margin: [10, 15, 10, 15],
-        html2canvas: { scale: 2 },
-        jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
-      })
-      .toPdf();
+  document.body.appendChild(hiddenDiv);
 
-    worker.get("pdf").then(async (pdf) => {
-      const pdfBlob = new Blob([pdf.output("arraybuffer")], {
-        type: "application/pdf",
-      });
+  try {
+    // Allow rendering
+    await new Promise((resolve) => setTimeout(resolve, 200));
 
-      // Create form data
-      const formData = new FormData();
-      formData.append("mrn", appointment.mrn); // backend uses this for filename
-      formData.append("file", pdfBlob, `${appointment.mrn}.pdf`);
-
-      // ⬇️ Send template name too
-      if (selectedTemplate) {
-        formData.append("templateName", selectedTemplate.name);
-      }
-      try {
-        const res = await fetch(
-          "http://localhost:8000/api/appointments/prescription",
-          {
-            method: "POST",
-            body: formData,
-          }
-        );
-
-        const data = await res.json();
-        if (data.success) {
-          alert("Prescription saved on server successfully!");
-          // Optional: also open in new tab for print
-          const url = URL.createObjectURL(pdfBlob);
-          window.open(url, "_blank");
-          navigate("/pending-appointments");
-        } else {
-          alert(data.message || "Failed to save prescription.");
-        }
-      } catch (err) {
-        console.error("Error uploading prescription:", err);
-        alert("Error uploading prescription.");
-      }
+    // Convert to canvas
+    const canvas = await html2canvas(hiddenDiv, {
+      scale: 2,
+      useCORS: true,
     });
-  };
+
+    const imgData = canvas.toDataURL("image/png");
+
+    // Generate A4 PDF
+    const pdf = new jsPDF("p", "mm", "a4");
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+
+    const imgWidth = pageWidth - 20; // leave margin like html2pdf
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+    let heightLeft = imgHeight;
+    let position = 10; // top margin
+
+    pdf.addImage(imgData, "PNG", 10, position, imgWidth, imgHeight);
+    heightLeft -= pageHeight;
+
+    while (heightLeft > 0) {
+      position = heightLeft - imgHeight + 10;
+      pdf.addPage();
+      pdf.addImage(imgData, "PNG", 10, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+    }
+
+    // Save blob
+    const pdfBlob = new Blob([pdf.output("arraybuffer")], {
+      type: "application/pdf",
+    });
+
+    // Upload to server
+    const formData = new FormData();
+    formData.append("mrn", appointment.mrn);
+    formData.append("file", pdfBlob, `${appointment.mrn}.pdf`);
+
+    if (selectedTemplate) {
+      formData.append("templateName", selectedTemplate.name);
+    }
+
+    const res = await fetch(
+      "http://localhost:8000/api/appointments/prescription",
+      {
+        method: "POST",
+        body: formData,
+      }
+    );
+
+    const data = await res.json();
+    if (data.success) {
+      alert("Prescription saved on server successfully!");
+      const url = URL.createObjectURL(pdfBlob);
+      window.open(url, "_blank");
+      navigate("/pending-appointments");
+    } else {
+      alert(data.message || "Failed to save prescription.");
+    }
+  } catch (err) {
+    console.error("Error generating/uploading prescription:", err);
+    alert("Error generating prescription.");
+  } finally {
+    // Cleanup hidden div
+    document.body.removeChild(hiddenDiv);
+  }
+};
+
 
   if (loading) {
     return (
