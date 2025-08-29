@@ -220,14 +220,17 @@ const storage = multer.diskStorage({
       return cb(new Error("MRN is required"), null);
     }
 
-    const filePath = path.join(prescriptionsDir, `${mrn}.pdf`);
+      // 🔒 Sanitize MRN (remove slashes, spaces, weird chars)
+  const safeMrn = mrn.replace(/[^a-zA-Z0-9_-]/g, "_");
+
+    const filePath = path.join(prescriptionsDir, `${safeMrn}.pdf`);
 
     // ✅ If file exists, delete it first
     if (fs.existsSync(filePath)) {
       fs.unlinkSync(filePath);
     }
 
-    cb(null, `${mrn}.pdf`);
+    cb(null, `${safeMrn}.pdf`);
   },
 });
 
@@ -331,6 +334,56 @@ return res.sendFile(filePath);
   }
 }
 
+// ✅ Delete appointment + prescription (DB + file)
+async function deleteAppointment(req, res) {
+  try {
+    const { mrn } = req.body;
+
+    if (!mrn) {
+      return res.status(400).json({
+        success: false,
+        message: "MRN is required",
+      });
+    }
+
+    // 1. Delete the appointment
+    const appointment = await Appointment.findOneAndDelete({ mrn });
+    if (!appointment) {
+      return res.status(404).json({
+        success: false,
+        message: "No appointment found with this MRN",
+      });
+    }
+
+    // 2. Find prescription (if any)
+    const prescription = await Prescription.findOneAndDelete({ mrn });
+    
+    if (prescription) {
+      // 3. Delete file from disk if it exists
+      const filePath = path.join(__dirname, "../Prescriptions", prescription.fileName);
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Appointment and related prescription deleted successfully",
+      deletedAppointment: appointment,
+      deletedPrescription: prescription || null,
+    });
+
+  } catch (error) {
+    console.error("Error deleting appointment:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to delete appointment",
+      error: error.message,
+    });
+  }
+}
+
+
 module.exports = {
   addAppointment,
   pendingAppointments,
@@ -340,5 +393,6 @@ module.exports = {
   uploadPrescription,
   upload,
   searchAppointment,
-  getPrescription
+  getPrescription,
+  deleteAppointment
 };

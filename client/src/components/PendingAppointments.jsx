@@ -35,6 +35,13 @@ export const PendingAppointments = () => {
     navigate(`/appointment/${id}`);
   };
 
+  const formatToAMPM = (timeStr) => {
+  let [hour, minute] = timeStr.split(":").map(Number);
+  const ampm = hour >= 12 ? "PM" : "AM";
+  hour = hour % 12 || 12; // convert 0 → 12 and 13–23 → 1–11
+  return `${hour}:${minute.toString().padStart(2, "0")} ${ampm}`;
+};
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -68,7 +75,7 @@ export const PendingAppointments = () => {
                   {new Date(appt.date).toLocaleDateString()}
                 </p>
                 <p>
-                  <strong>Time In:</strong> {appt.timeIn}
+                  <strong>Time In:</strong> {formatToAMPM(appt.timeIn)}
                 </p>
                 <p>
                   <strong>Phone:</strong> {appt.phone}

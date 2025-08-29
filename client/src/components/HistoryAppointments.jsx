@@ -22,6 +22,7 @@ import { Label } from "@/components/ui/label";
 import html2canvas from "html2canvas-pro";
 import jsPDF from "jspdf";
 import { renderAsync } from "docx-preview";
+import { useNavigate } from "react-router-dom";
 
 export const HistoryAppointments = () => {
   // ✅ Initialize with today's date (formatted YYYY-MM-DD)
@@ -35,6 +36,7 @@ export const HistoryAppointments = () => {
   const [selectedAppointment, setSelectedAppointment] = useState(null);
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [docxContent, setDocxContent] = useState(null);
+  const navigate = useNavigate();
 
   // Ref to trigger hidden input
   const fileInputRef = useRef(null);
@@ -304,12 +306,45 @@ export const HistoryAppointments = () => {
 
       // Open in new tab directly
       window.open(
-        `http://localhost:8000/api/appointments/openPrescription/${mrn}`,
+        `http://localhost:8000/api/appointments/openPrescription/${encodeURIComponent(
+          mrn
+        )}`,
         "_blank"
       );
     } catch (error) {
       console.error("Error opening prescription:", error);
       alert("Failed to open prescription");
+    }
+  };
+
+  const handleDeletePrescription = async (mrn) => {
+    try {
+      if (!mrn) {
+        alert("MRN is missing");
+        return;
+      }
+
+      const res = await fetch(
+        `http://localhost:8000/api/appointments/delete`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ mrn }),
+          method: "POST",
+        }
+      );
+
+      const data = await res.json();
+      if (data.success) {
+        alert("Record deleted successfully!");
+        navigate("/history-appointments");
+      } else {
+        alert(data.message || "Failed to delete record.");
+      }
+    } catch (error) {
+      console.error("Error deleting record:", error);
+      alert("Failed to delete record");
     }
   };
 
@@ -386,8 +421,8 @@ export const HistoryAppointments = () => {
                     <TableCell>
                       {new Date(appt.date).toLocaleDateString()}
                     </TableCell>
-                    <TableCell>{appt.timeIn || "N/A"}</TableCell>
-                    <TableCell>{appt.timeOut || "N/A"}</TableCell>
+                    <TableCell>{formatToAMPM(appt.timeIn) || "N/A"}</TableCell>
+                    <TableCell>{formatToAMPM(appt.timeOut) || "N/A"}</TableCell>
                     <TableCell>{appt.status || "N/A"}</TableCell>
                   </TableRow>
                 ))}
@@ -449,14 +484,10 @@ export const HistoryAppointments = () => {
                 <p>{selectedAppointment.address}</p>
               </div>
               <div>
-                <Label>Gestation:</Label>
-                <p>{selectedAppointment.gestation || "N/A"}</p>
-              </div>
-              <div>
                 <Label>Height:</Label>
                 <p>
                   {selectedAppointment.height
-                    ? `${selectedAppointment.height} cm`
+                    ? `${selectedAppointment.height}`
                     : "N/A"}
                 </p>
               </div>
@@ -464,7 +495,7 @@ export const HistoryAppointments = () => {
                 <Label>Weight:</Label>
                 <p>
                   {selectedAppointment.weight
-                    ? `${selectedAppointment.weight} kg`
+                    ? `${selectedAppointment.weight}`
                     : "N/A"}
                 </p>
               </div>
@@ -484,7 +515,7 @@ export const HistoryAppointments = () => {
                 <Label>Temperature:</Label>
                 <p>
                   {selectedAppointment.temperature
-                    ? `${selectedAppointment.temperature} °F`
+                    ? `${selectedAppointment.temperature}`
                     : "N/A"}
                 </p>
               </div>
@@ -498,11 +529,11 @@ export const HistoryAppointments = () => {
               </div>
               <div>
                 <Label>Time In:</Label>
-                <p>{selectedAppointment.timeIn || "N/A"}</p>
+                <p>{formatToAMPM(selectedAppointment.timeIn) || "N/A"}</p>
               </div>
               <div>
                 <Label>Time Out:</Label>
-                <p>{selectedAppointment.timeOut || "N/A"}</p>
+                <p>{formatToAMPM(selectedAppointment.timeOut) || "N/A"}</p>
               </div>
             </div>
           )}
@@ -563,7 +594,16 @@ export const HistoryAppointments = () => {
                 </div>
               </div>
               {/* ✅ New button to view prescription */}
-              <div className="pt-3 justify-center align-middle flex">
+              <div className="pt-3 flex justify-between items-center">
+                <Button
+                  variant="destructive"
+                  onClick={() =>
+                    handleDeletePrescription(selectedAppointment.mrn)
+                  }
+                >
+                  Delete
+                </Button>
+
                 <Button
                   onClick={() =>
                     handleViewPrescription(selectedAppointment.mrn)

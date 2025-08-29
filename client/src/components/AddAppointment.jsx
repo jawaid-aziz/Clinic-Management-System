@@ -217,7 +217,7 @@ export const AddAppointment = () => {
               <Input
                 value={form.weight}
                 onChange={(e) => handleChange("weight", e.target.value)}
-                placeholder="kg"
+                placeholder="kg/g"
               />
             </div>
             <div>
@@ -225,7 +225,7 @@ export const AddAppointment = () => {
               <Input
                 value={form.height}
                 onChange={(e) => handleChange("height", e.target.value)}
-                placeholder="cm"
+                placeholder="cm/ft"
               />
             </div>
             <div>
@@ -249,7 +249,7 @@ export const AddAppointment = () => {
               <Input
                 value={form.temperature}
                 onChange={(e) => handleChange("temperature", e.target.value)}
-                placeholder="°F"
+                placeholder="°F/°C"
               />
             </div>
           </div>

@@ -10,7 +10,6 @@ import html2canvas from "html2canvas-pro";
 import jsPDF from "jspdf";
 import { useNavigate } from "react-router-dom";
 
-
 export const Appointment = () => {
   const { id } = useParams();
   const [appointment, setAppointment] = useState(null);
@@ -23,12 +22,12 @@ export const Appointment = () => {
   const [timeOut, setTimeOut] = useState("");
   const navigate = useNavigate();
 
-const formatToAMPM = (timeStr) => {
-  let [hour, minute] = timeStr.split(":").map(Number);
-  const ampm = hour >= 12 ? "PM" : "AM";
-  hour = hour % 12 || 12; // convert 0 → 12 and 13–23 → 1–11
-  return `${hour}:${minute.toString().padStart(2, "0")} ${ampm}`;
-};
+  const formatToAMPM = (timeStr) => {
+    let [hour, minute] = timeStr.split(":").map(Number);
+    const ampm = hour >= 12 ? "PM" : "AM";
+    hour = hour % 12 || 12; // convert 0 → 12 and 13–23 → 1–11
+    return `${hour}:${minute.toString().padStart(2, "0")} ${ampm}`;
+  };
 
   // Ref to trigger hidden input
   const fileInputRef = useRef(null);
@@ -105,27 +104,27 @@ const formatToAMPM = (timeStr) => {
     }
   };
 
-const handleGeneratePrescription = async () => {
-  if (!appointment) {
-    alert("Make sure appointment is loaded.");
-    return;
-  }
+  const handleGeneratePrescription = async () => {
+    if (!appointment) {
+      alert("Make sure appointment is loaded.");
+      return;
+    }
 
-  // Create hidden container for PDF rendering
-  const hiddenDiv = document.createElement("div");
-  hiddenDiv.style.paddingTop = "80px";
-  hiddenDiv.style.paddingBottom = "120px";
-  hiddenDiv.style.fontFamily = "Arial, sans-serif";
-  hiddenDiv.style.fontSize = "10pt";
-  hiddenDiv.style.lineHeight = "1.2";
-  hiddenDiv.style.maxHeight = "1000px";
-  hiddenDiv.style.overflow = "hidden";
-  hiddenDiv.style.position = "absolute";
-  hiddenDiv.style.top = "0";
-  hiddenDiv.style.left = "-9999px";
-  hiddenDiv.style.visibility = "visible"; // keep it renderable
+    // Create hidden container for PDF rendering
+    const hiddenDiv = document.createElement("div");
+    hiddenDiv.style.paddingTop = "80px";
+    hiddenDiv.style.paddingBottom = "120px";
+    hiddenDiv.style.fontFamily = "Arial, sans-serif";
+    hiddenDiv.style.fontSize = "10pt";
+    hiddenDiv.style.lineHeight = "1.2";
+    hiddenDiv.style.maxHeight = "1000px";
+    hiddenDiv.style.overflow = "hidden";
+    hiddenDiv.style.position = "absolute";
+    hiddenDiv.style.top = "0";
+    hiddenDiv.style.left = "-9999px";
+    hiddenDiv.style.visibility = "visible"; // keep it renderable
 
-  hiddenDiv.innerHTML = `
+    hiddenDiv.innerHTML = `
     <style>
       * { background-color: transparent !important; }
       p { margin-top: 2px !important; margin-bottom: 2px !important; }
@@ -139,7 +138,9 @@ const handleGeneratePrescription = async () => {
         <p><strong>Sex:</strong> ${appointment.sex}</p>
         <p><strong>Phone:</strong> ${appointment.phone}</p>
         <p><strong>CNIC:</strong> ${appointment.cnic}</p>
-        <p><strong>Date:</strong> ${new Date(appointment.date).toLocaleDateString()}</p>
+        <p><strong>Date:</strong> ${new Date(
+          appointment.date
+        ).toLocaleDateString()}</p>
         <p><strong>Height:</strong> ${appointment.height}</p>
         <p><strong>Weight:</strong> ${appointment.weight}</p>
         <p><strong>BP:</strong> ${appointment.bp}</p>
@@ -167,81 +168,80 @@ const handleGeneratePrescription = async () => {
     </div>
   `;
 
-  document.body.appendChild(hiddenDiv);
+    document.body.appendChild(hiddenDiv);
 
-  try {
-    // Allow rendering
-    await new Promise((resolve) => setTimeout(resolve, 200));
+    try {
+      // Allow rendering
+      await new Promise((resolve) => setTimeout(resolve, 200));
 
-    // Convert to canvas
-    const canvas = await html2canvas(hiddenDiv, {
-      scale: 2,
-      useCORS: true,
-    });
+      // Convert to canvas
+      const canvas = await html2canvas(hiddenDiv, {
+        scale: 2,
+        useCORS: true,
+      });
 
-    const imgData = canvas.toDataURL("image/jpeg");
+      const imgData = canvas.toDataURL("image/jpeg");
 
-    // Generate A4 PDF
-    const pdf = new jsPDF("p", "mm", "a4");
-    const pageWidth = pdf.internal.pageSize.getWidth();
-    const pageHeight = pdf.internal.pageSize.getHeight();
+      // Generate A4 PDF
+      const pdf = new jsPDF("p", "mm", "a4");
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
 
-    const imgWidth = pageWidth - 20; // leave margin like html2pdf
-    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      const imgWidth = pageWidth - 20; // leave margin like html2pdf
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
-    let heightLeft = imgHeight;
-    let position = 10; // top margin
+      let heightLeft = imgHeight;
+      let position = 10; // top margin
 
-    pdf.addImage(imgData, "JPEG", 10, position, imgWidth, imgHeight);
-    heightLeft -= pageHeight;
-
-    while (heightLeft > 0) {
-      position = heightLeft - imgHeight + 10;
-      pdf.addPage();
       pdf.addImage(imgData, "JPEG", 10, position, imgWidth, imgHeight);
       heightLeft -= pageHeight;
-    }
 
-    // Save blob
-    const pdfBlob = new Blob([pdf.output("arraybuffer")], {
-      type: "application/pdf",
-    });
-
-    // Upload to server
-    const formData = new FormData();
-    formData.append("mrn", appointment.mrn);
-    formData.append("file", pdfBlob, `${appointment.mrn}.pdf`);
-
-    if (selectedTemplate) {
-      formData.append("templateName", selectedTemplate.name);
-    }
-
-    const res = await fetch(
-      "http://localhost:8000/api/appointments/prescription",
-      {
-        method: "POST",
-        body: formData,
+      while (heightLeft > 0) {
+        position = heightLeft - imgHeight + 10;
+        pdf.addPage();
+        pdf.addImage(imgData, "JPEG", 10, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
       }
-    );
 
-    const data = await res.json();
-    if (data.success) {
-      alert("Prescription saved on server successfully!");
-      const url = URL.createObjectURL(pdfBlob);
-      window.open(url, "_blank");
-      navigate("/pending-appointments");
-    } else {
-      alert(data.message || "Failed to save prescription.");
+      // Save blob
+      const pdfBlob = new Blob([pdf.output("arraybuffer")], {
+        type: "application/pdf",
+      });
+
+      // Upload to server
+      const formData = new FormData();
+      formData.append("mrn", appointment.mrn);
+      formData.append("file", pdfBlob, `${appointment.mrn}.pdf`);
+
+      if (selectedTemplate) {
+        formData.append("templateName", selectedTemplate.name);
+      }
+      console.log(formData.get("mrn"));
+      const res = await fetch(
+        "http://localhost:8000/api/appointments/prescription",
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+
+      const data = await res.json();
+      if (data.success) {
+        alert("Prescription saved on server successfully!");
+        const url = URL.createObjectURL(pdfBlob);
+        window.open(url, "_blank");
+        navigate("/pending-appointments");
+      } else {
+        alert(data.message || "Failed to save prescription.");
+      }
+    } catch (err) {
+      console.error("Error generating/uploading prescription:", err);
+      alert("Error generating prescription.");
+    } finally {
+      // Cleanup hidden div
+      document.body.removeChild(hiddenDiv);
     }
-  } catch (err) {
-    console.error("Error generating/uploading prescription:", err);
-    alert("Error generating prescription.");
-  } finally {
-    // Cleanup hidden div
-    document.body.removeChild(hiddenDiv);
-  }
-};
-
+  };
 
   if (loading) {
     return (
@@ -288,7 +288,7 @@ const handleGeneratePrescription = async () => {
         <CardContent className="space-y-3">
           <div className="grid grid-cols-2 gap-2 text-sm">
             <p>
-              <strong>Doctor:</strong> {appointment.doctor}
+              <strong>Department:</strong> {appointment.doctor}
             </p>
             <p>
               <strong>Status:</strong> {appointment.status}
@@ -304,13 +304,10 @@ const handleGeneratePrescription = async () => {
               <strong>CNIC:</strong> {appointment.cnic}
             </p>
             <p>
-              <strong>Gestation:</strong> {appointment.gestation}
+              <strong>Height:</strong> {appointment.height}
             </p>
             <p>
-              <strong>Height:</strong> {appointment.height} cm
-            </p>
-            <p>
-              <strong>Weight:</strong> {appointment.weight} kg
+              <strong>Weight:</strong> {appointment.weight}
             </p>
             <p>
               <strong>BP:</strong> {appointment.bp}
@@ -319,10 +316,13 @@ const handleGeneratePrescription = async () => {
               <strong>Pulse:</strong> {appointment.pulse}
             </p>
             <p>
-              <strong>Temperature:</strong> {appointment.temperature} °C
+              <strong>Temperature:</strong> {appointment.temperature}
             </p>
             <p>
               <strong>VCO:</strong> {appointment.vco ? "Yes" : "No"}
+            </p>
+            <p>
+              <strong>Address:</strong> {appointment.address}
             </p>
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>

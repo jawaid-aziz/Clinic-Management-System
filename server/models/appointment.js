@@ -4,7 +4,7 @@ const appointmentSchema = new mongoose.Schema({
   mrn: {
     type: String,
     required: true,
-    unique: true, // Medical Record Number should be unique
+    unique: true,
     trim: true,
   },
   name: {
@@ -14,13 +14,12 @@ const appointmentSchema = new mongoose.Schema({
   },
   sex: {
     type: String,
-    enum: ["male", "female", "other"], // restrict to known values
+    enum: ["male", "female", "other"],
     required: true,
   },
   age: {
-    type: Number,
+    type: String,
     required: true,
-    min: 0,
   },
   date: {
     type: Date,
@@ -49,22 +48,19 @@ const appointmentSchema = new mongoose.Schema({
     type: String,
   },
   weight: {
-    type: Number, // kg
-    min: 0,
+    type: String,
   },
   height: {
-    type: Number, // cm
-    min: 0,
+    type: String,
   },
   bp: {
-    type: String, // e.g., "120/80"
+    type: String,
   },
   pulse: {
-    type: Number, // bpm
-    min: 0,
+    type: String,
   },
   temperature: {
-    type: Number, // Celsius
+    type: Number,
   },
   vco: {
     type: Boolean,

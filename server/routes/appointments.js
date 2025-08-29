@@ -8,13 +8,15 @@ const { addAppointment,
     uploadPrescription,
     upload,
     searchAppointment,
-    getPrescription
+    getPrescription,
+    deleteAppointment
 } = require('../controllers/appointments');
 
 router.post("/add", addAppointment);
 router.get("/pending", pendingAppointments);
 router.get("/history", historyAppointments);
 router.get("/search", searchAppointment);
+router.post("/delete", deleteAppointment);
 router.get("/:id", getAppointmentData);
 router.put("/:id/time", updateAppointmentTime);
 router.post("/prescription", upload.single("file"), uploadPrescription);
