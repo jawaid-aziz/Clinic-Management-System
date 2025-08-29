@@ -1,0 +1,8 @@
+{
+"scripts": {
+  "dev": "concurrently --kill-others-on-fail --raw \"npm run dev --prefix client\" \"npm start --prefix server\""
+},
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}
