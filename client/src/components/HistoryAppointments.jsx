@@ -233,7 +233,7 @@ export const HistoryAppointments = () => {
         useCORS: true,
       });
 
-      const imgData = canvas.toDataURL("image/png");
+      const imgData = canvas.toDataURL("image/jpeg");
 
       // Generate A4 PDF
       const pdf = new jsPDF("p", "mm", "a4");
@@ -246,13 +246,13 @@ export const HistoryAppointments = () => {
       let heightLeft = imgHeight;
       let position = 10; // top margin
 
-      pdf.addImage(imgData, "PNG", 10, position, imgWidth, imgHeight);
+      pdf.addImage(imgData, "JPEG", 10, position, imgWidth, imgHeight);
       heightLeft -= pageHeight;
 
       while (heightLeft > 0) {
         position = heightLeft - imgHeight + 10;
         pdf.addPage();
-        pdf.addImage(imgData, "PNG", 10, position, imgWidth, imgHeight);
+        pdf.addImage(imgData, "JPEG", 10, position, imgWidth, imgHeight);
         heightLeft -= pageHeight;
       }
 
