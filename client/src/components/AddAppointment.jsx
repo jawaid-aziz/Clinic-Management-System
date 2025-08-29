@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   Card,
@@ -31,8 +30,6 @@ export const AddAppointment = () => {
     bp: "",
     pulse: "",
     temperature: "",
-    vco: false,
-    gestation: "",
   });
 
   const handleChange = (key, value) => {
@@ -61,8 +58,6 @@ export const AddAppointment = () => {
           bp: form.bp,
           pulse: form.pulse,
           temperature: form.temperature,
-          vco: form.vco,
-          gestation: form.gestation,
         }),
       });
 
@@ -87,8 +82,6 @@ export const AddAppointment = () => {
           bp: "",
           pulse: "",
           temperature: "",
-          vco: false,
-          gestation: "",
         });
       } else {
         alert("Error: " + data.error);
@@ -256,39 +249,13 @@ export const AddAppointment = () => {
               <Input
                 value={form.temperature}
                 onChange={(e) => handleChange("temperature", e.target.value)}
-                placeholder="°C"
+                placeholder="°F"
               />
-            </div>
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                checked={form.vco}
-                onCheckedChange={(val) => handleChange("vco", val)}
-                id="vco"
-              />
-              <Label htmlFor="vco">VCO</Label>
             </div>
           </div>
 
           <Separator />
 
-          {/* Gestation */}
-          <div>
-            <Label>Gestation</Label>
-            <RadioGroup
-              value={form.gestation}
-              onValueChange={(val) => handleChange("gestation", val)}
-              className="flex space-x-6 mt-2"
-            >
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="single" id="single" />
-                <Label htmlFor="single">Single</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="multiple" id="multiple" />
-                <Label htmlFor="multiple">Multiple</Label>
-              </div>
-            </RadioGroup>
-          </div>
           <div>
             <Label>Time-out</Label>
             <Input

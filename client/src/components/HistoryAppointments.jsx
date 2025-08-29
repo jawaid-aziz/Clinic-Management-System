@@ -42,6 +42,13 @@ export const HistoryAppointments = () => {
   const [timeIn, setTimeIn] = useState("");
   const [timeOut, setTimeOut] = useState("");
 
+  const formatToAMPM = (timeStr) => {
+    let [hour, minute] = timeStr.split(":").map(Number);
+    const ampm = hour >= 12 ? "PM" : "AM";
+    hour = hour % 12 || 12; // convert 0 → 12 and 13–23 → 1–11
+    return `${hour}:${minute.toString().padStart(2, "0")} ${ampm}`;
+  };
+
   const handleOpenAppointment = (appointment) => {
     setSelectedAppointment(appointment);
     setOpen(true);
@@ -150,149 +157,161 @@ export const HistoryAppointments = () => {
     }
   };
 
-const handleGeneratePrescription = async () => {
-  if (!docxContent || !selectedAppointment) {
-    alert("Please choose a template and make sure appointment is loaded.");
-    return;
-  }
+  const handleGeneratePrescription = async () => {
+    if (!docxContent || !selectedAppointment) {
+      alert("Please choose a template and make sure appointment is loaded.");
+      return;
+    }
 
-  // Create hidden container for PDF rendering
-  const hiddenDiv = document.createElement("div");
-  hiddenDiv.style.paddingTop = "120px";
-  hiddenDiv.style.paddingBottom = "120px";
-  hiddenDiv.style.fontFamily = "Arial, sans-serif";
-  hiddenDiv.style.fontSize = "10pt";
-  hiddenDiv.style.lineHeight = "1.2";
-  hiddenDiv.style.maxHeight = "1000px";
-  hiddenDiv.style.overflow = "hidden";
-  hiddenDiv.style.position = "absolute";
-  hiddenDiv.style.top = "0";
-  hiddenDiv.style.left = "-9999px";
-  hiddenDiv.style.visibility = "visible"; // keep it renderable
+    // Create hidden container for PDF rendering
+    const hiddenDiv = document.createElement("div");
+    hiddenDiv.style.paddingTop = "80px";
+    hiddenDiv.style.paddingBottom = "120px";
+    hiddenDiv.style.fontFamily = "Arial, sans-serif";
+    hiddenDiv.style.fontSize = "10pt";
+    hiddenDiv.style.lineHeight = "1.2";
+    hiddenDiv.style.maxHeight = "1000px";
+    hiddenDiv.style.overflow = "hidden";
+    hiddenDiv.style.position = "absolute";
+    hiddenDiv.style.top = "0";
+    hiddenDiv.style.left = "-9999px";
+    hiddenDiv.style.visibility = "visible"; // keep it renderable
 
-  hiddenDiv.innerHTML = `
+    hiddenDiv.innerHTML = `
     <style>
       * { background-color: transparent !important; }
       p { margin-top: 2px !important; margin-bottom: 2px !important; }
       div { margin-top: 0 !important; }
     </style>
     <div style="max-width:700px; margin:auto;">
-      <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap: 8px; font-size:10pt;">
+      <div style="display:grid; grid-template-columns: repeat(5, 1fr); gap: 6px; font-size:8pt;">
       <p><strong>MRN:</strong> ${selectedAppointment.mrn}</p>
         <p><strong>Name:</strong> ${selectedAppointment.name}</p>
         <p><strong>Age:</strong> ${selectedAppointment.age}</p>
         <p><strong>Sex:</strong> ${selectedAppointment.sex}</p>
         <p><strong>Phone:</strong> ${selectedAppointment.phone}</p>
         <p><strong>CNIC:</strong> ${selectedAppointment.cnic}</p>
-        <p><strong>Date:</strong> ${new Date(selectedAppointment.date).toLocaleDateString()}</p>
-        <p><strong>Address:</strong> ${selectedAppointment.address}</p>
+        <p><strong>Date:</strong> ${new Date(
+          selectedAppointment.date
+        ).toLocaleDateString()}</p>
         <p><strong>Height:</strong> ${selectedAppointment.height}</p>
         <p><strong>Weight:</strong> ${selectedAppointment.weight}</p>
         <p><strong>BP:</strong> ${selectedAppointment.bp}</p>
         <p><strong>Pulse:</strong> ${selectedAppointment.pulse}</p>
         <p><strong>Temperature:</strong> ${selectedAppointment.temperature}</p>
-        <p><strong>Gestation:</strong> ${selectedAppointment.gestation}</p>
         <p><strong>VCO:</strong> ${selectedAppointment.vco ? "Yes" : "No"}</p>
-        <p><strong>Time In:</strong> ${timeIn}</p>
-        <p><strong>Time Out:</strong> ${timeOut}</p>
+        <p><strong>Address:</strong> ${selectedAppointment.address}</p>
+
       </div>
+
       <hr style="margin: 12px 0;" />
-      <div style="font-size:10pt; line-height:1.2;">
-        ${docxContent}
+      
+      <div style="font-size:9pt; text-align:right;">
+        <p><strong>Time In:</strong> ${formatToAMPM(timeIn)}</p>
+        <p><strong>Time Out:</strong> ${formatToAMPM(timeOut)}</p>
       </div>
+
+    <!-- ✅ Content area with stamp above it -->
+    <div style="font-size:10pt; line-height:1.2; margin-top:20px; position:relative;">
+      <!-- Stamp positioned absolutely -->
+      ${docxContent}
+            <img src="/stamp.png" alt="Stamp"
+           style="position:absolute; bottom:400px; right:20px; width:120px; z-index:10;" />
+    </div>
     </div>
   `;
 
-  document.body.appendChild(hiddenDiv);
+    document.body.appendChild(hiddenDiv);
 
-  try {
-    // Allow rendering
-    await new Promise((resolve) => setTimeout(resolve, 200));
+    try {
+      // Allow rendering
+      await new Promise((resolve) => setTimeout(resolve, 200));
 
-    // Convert to canvas
-    const canvas = await html2canvas(hiddenDiv, {
-      scale: 2,
-      useCORS: true,
-    });
+      // Convert to canvas
+      const canvas = await html2canvas(hiddenDiv, {
+        scale: 2,
+        useCORS: true,
+      });
 
-    const imgData = canvas.toDataURL("image/png");
+      const imgData = canvas.toDataURL("image/png");
 
-    // Generate A4 PDF
-    const pdf = new jsPDF("p", "mm", "a4");
-    const pageWidth = pdf.internal.pageSize.getWidth();
-    const pageHeight = pdf.internal.pageSize.getHeight();
+      // Generate A4 PDF
+      const pdf = new jsPDF("p", "mm", "a4");
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
 
-    const imgWidth = pageWidth - 20; // leave margin like html2pdf
-    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      const imgWidth = pageWidth - 20; // leave margin like html2pdf
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
-    let heightLeft = imgHeight;
-    let position = 10; // top margin
+      let heightLeft = imgHeight;
+      let position = 10; // top margin
 
-    pdf.addImage(imgData, "PNG", 10, position, imgWidth, imgHeight);
-    heightLeft -= pageHeight;
-
-    while (heightLeft > 0) {
-      position = heightLeft - imgHeight + 10;
-      pdf.addPage();
       pdf.addImage(imgData, "PNG", 10, position, imgWidth, imgHeight);
       heightLeft -= pageHeight;
-    }
 
-    // Save blob
-    const pdfBlob = new Blob([pdf.output("arraybuffer")], {
-      type: "application/pdf",
-    });
-
-    // Upload to server
-    const formData = new FormData();
-    formData.append("mrn", selectedAppointment.mrn);
-    formData.append("file", pdfBlob, `${selectedAppointment.mrn}.pdf`);
-
-    if (selectedTemplate) {
-      formData.append("templateName", selectedTemplate.name);
-    }
-
-    const res = await fetch(
-      "http://localhost:8000/api/appointments/prescription",
-      {
-        method: "POST",
-        body: formData,
+      while (heightLeft > 0) {
+        position = heightLeft - imgHeight + 10;
+        pdf.addPage();
+        pdf.addImage(imgData, "PNG", 10, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
       }
-    );
 
-    const data = await res.json();
-    if (data.success) {
-      alert("Prescription saved on server successfully!");
-      const url = URL.createObjectURL(pdfBlob);
-      window.open(url, "_blank");
-    } else {
-      alert(data.message || "Failed to save prescription.");
+      // Save blob
+      const pdfBlob = new Blob([pdf.output("arraybuffer")], {
+        type: "application/pdf",
+      });
+
+      // Upload to server
+      const formData = new FormData();
+      formData.append("mrn", selectedAppointment.mrn);
+      formData.append("file", pdfBlob, `${selectedAppointment.mrn}.pdf`);
+
+      if (selectedTemplate) {
+        formData.append("templateName", selectedTemplate.name);
+      }
+
+      const res = await fetch(
+        "http://localhost:8000/api/appointments/prescription",
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+
+      const data = await res.json();
+      if (data.success) {
+        alert("Prescription saved on server successfully!");
+        const url = URL.createObjectURL(pdfBlob);
+        window.open(url, "_blank");
+      } else {
+        alert(data.message || "Failed to save prescription.");
+      }
+    } catch (err) {
+      console.error("Error generating/uploading prescription:", err);
+      alert("Error generating prescription.");
+    } finally {
+      // Cleanup hidden div
+      document.body.removeChild(hiddenDiv);
     }
-  } catch (err) {
-    console.error("Error generating/uploading prescription:", err);
-    alert("Error generating prescription.");
-  } finally {
-    // Cleanup hidden div
-    document.body.removeChild(hiddenDiv);
-  }
-};
-
-
+  };
 
   const handleViewPrescription = async (mrn) => {
-  try {
-    if (!mrn) {
-      alert("MRN is missing");
-      return;
-    }
+    try {
+      if (!mrn) {
+        alert("MRN is missing");
+        return;
+      }
 
-    // Open in new tab directly
-    window.open(`http://localhost:8000/api/appointments/openPrescription/${mrn}`, "_blank");
-  } catch (error) {
-    console.error("Error opening prescription:", error);
-    alert("Failed to open prescription");
-  }
-};
+      // Open in new tab directly
+      window.open(
+        `http://localhost:8000/api/appointments/openPrescription/${mrn}`,
+        "_blank"
+      );
+    } catch (error) {
+      console.error("Error opening prescription:", error);
+      alert("Failed to open prescription");
+    }
+  };
 
   return (
     <div className="p-6 max-w-3xl mx-auto space-y-4">
@@ -465,7 +484,7 @@ const handleGeneratePrescription = async () => {
                 <Label>Temperature:</Label>
                 <p>
                   {selectedAppointment.temperature
-                    ? `${selectedAppointment.temperature} °C`
+                    ? `${selectedAppointment.temperature} °F`
                     : "N/A"}
                 </p>
               </div>

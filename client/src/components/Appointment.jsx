@@ -10,6 +10,7 @@ import html2canvas from "html2canvas-pro";
 import jsPDF from "jspdf";
 import { useNavigate } from "react-router-dom";
 
+
 export const Appointment = () => {
   const { id } = useParams();
   const [appointment, setAppointment] = useState(null);
@@ -21,6 +22,13 @@ export const Appointment = () => {
   const [timeIn, setTimeIn] = useState("");
   const [timeOut, setTimeOut] = useState("");
   const navigate = useNavigate();
+
+const formatToAMPM = (timeStr) => {
+  let [hour, minute] = timeStr.split(":").map(Number);
+  const ampm = hour >= 12 ? "PM" : "AM";
+  hour = hour % 12 || 12; // convert 0 → 12 and 13–23 → 1–11
+  return `${hour}:${minute.toString().padStart(2, "0")} ${ampm}`;
+};
 
   // Ref to trigger hidden input
   const fileInputRef = useRef(null);
@@ -105,7 +113,7 @@ const handleGeneratePrescription = async () => {
 
   // Create hidden container for PDF rendering
   const hiddenDiv = document.createElement("div");
-  hiddenDiv.style.paddingTop = "120px";
+  hiddenDiv.style.paddingTop = "80px";
   hiddenDiv.style.paddingBottom = "120px";
   hiddenDiv.style.fontFamily = "Arial, sans-serif";
   hiddenDiv.style.fontSize = "10pt";
@@ -124,7 +132,7 @@ const handleGeneratePrescription = async () => {
       div { margin-top: 0 !important; }
     </style>
     <div style="max-width:700px; margin:auto;">
-      <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap: 8px; font-size:10pt;">
+      <div style="display:grid; grid-template-columns: repeat(5, 1fr); gap: 6px; font-size:8pt;">
       <p><strong>MRN:</strong> ${appointment.mrn}</p>
         <p><strong>Name:</strong> ${appointment.name}</p>
         <p><strong>Age:</strong> ${appointment.age}</p>
@@ -132,21 +140,30 @@ const handleGeneratePrescription = async () => {
         <p><strong>Phone:</strong> ${appointment.phone}</p>
         <p><strong>CNIC:</strong> ${appointment.cnic}</p>
         <p><strong>Date:</strong> ${new Date(appointment.date).toLocaleDateString()}</p>
-        <p><strong>Address:</strong> ${appointment.address}</p>
         <p><strong>Height:</strong> ${appointment.height}</p>
         <p><strong>Weight:</strong> ${appointment.weight}</p>
         <p><strong>BP:</strong> ${appointment.bp}</p>
         <p><strong>Pulse:</strong> ${appointment.pulse}</p>
         <p><strong>Temperature:</strong> ${appointment.temperature}</p>
-        <p><strong>Gestation:</strong> ${appointment.gestation}</p>
+        <p><strong>Address:</strong> ${appointment.address}</p>
         <p><strong>VCO:</strong> ${appointment.vco ? "Yes" : "No"}</p>
-        <p><strong>Time In:</strong> ${timeIn}</p>
-        <p><strong>Time Out:</strong> ${timeOut}</p>
       </div>
+
       <hr style="margin: 12px 0;" />
-      <div style="font-size:10pt; line-height:1.2;">
-        ${docxContent}
+
+      <div style="font-size:9pt; text-align:right;">
+        <p><strong>Time In:</strong> ${formatToAMPM(timeIn)}</p>
+        <p><strong>Time Out:</strong> ${formatToAMPM(timeOut)}</p>
       </div>
+
+    <!-- ✅ Content area with stamp above it -->
+    <div style="font-size:10pt; line-height:1.2; margin-top:20px; position:relative;">
+      <!-- Stamp positioned absolutely -->
+      ${docxContent}
+            <img src="/stamp.png" alt="Stamp"
+           style="position:absolute; bottom:400px; right:20px; width:120px; z-index:10;" />
+    </div>
+    
     </div>
   `;
 

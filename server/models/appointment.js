@@ -68,10 +68,7 @@ const appointmentSchema = new mongoose.Schema({
   },
   vco: {
     type: Boolean,
-    default: false,
-  },
-  gestation: {
-    type: String, // e.g. "12 weeks"
+    default: true,
   },
   status: {
     type: String,
