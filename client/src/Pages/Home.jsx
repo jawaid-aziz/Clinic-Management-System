@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import { useRole } from "@/context/RoleProvider";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 export const Home = () => {
   const { role } = useRole();
   const [pendingCount, setPendingCount] = useState(0);
@@ -15,14 +17,14 @@ export const Home = () => {
         const today = new Date().toISOString().split("T")[0];
 
         // Fetch pending appointments
-        const pendingRes = await fetch(`http://localhost:8000/api/appointments/pending?role=${role}`);
+        const pendingRes = await fetch(`${API_URL}appointments/pending?role=${role}`);
         const pendingData = await pendingRes.json();
         if (pendingData.success) {
           setPendingCount(pendingData.count);
         }
 
         // Fetch today's appointments
-        const historyRes = await fetch(`http://localhost:8000/api/appointments/history?date=${today}`);
+        const historyRes = await fetch(`${API_URL}appointments/history?date=${today}`);
         const historyData = await historyRes.json();
 
         if (historyData.success) {

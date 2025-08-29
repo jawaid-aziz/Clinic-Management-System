@@ -24,6 +24,8 @@ import jsPDF from "jspdf";
 import { renderAsync } from "docx-preview";
 import { useNavigate } from "react-router-dom";
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 export const HistoryAppointments = () => {
   // ✅ Initialize with today's date (formatted YYYY-MM-DD)
   const today = new Date().toISOString().split("T")[0];
@@ -65,7 +67,7 @@ export const HistoryAppointments = () => {
     setError("");
     try {
       const res = await fetch(
-        `http://localhost:8000/api/appointments/history?date=${selectedDate}`
+        `${API_URL}appointments/history?date=${selectedDate}`
       );
       const data = await res.json();
 
@@ -96,7 +98,7 @@ export const HistoryAppointments = () => {
     setError("");
     try {
       const res = await fetch(
-        `http://localhost:8000/api/appointments/search?query=${encodeURIComponent(
+        `${API_URL}appointments/search?query=${encodeURIComponent(
           searchQuery
         )}`
       );
@@ -119,7 +121,7 @@ export const HistoryAppointments = () => {
   const handleSaveTimes = async (id) => {
     try {
       const res = await fetch(
-        `http://localhost:8000/api/appointments/${id}/time`,
+        `${API_URL}appointments/${id}/time`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -273,7 +275,7 @@ export const HistoryAppointments = () => {
       }
 
       const res = await fetch(
-        "http://localhost:8000/api/appointments/prescription",
+        `${API_URL}appointments/prescription`,
         {
           method: "POST",
           body: formData,
@@ -306,7 +308,7 @@ export const HistoryAppointments = () => {
 
       // Open in new tab directly
       window.open(
-        `http://localhost:8000/api/appointments/openPrescription/${encodeURIComponent(
+        `${API_URL}appointments/openPrescription/${encodeURIComponent(
           mrn
         )}`,
         "_blank"
@@ -325,7 +327,7 @@ export const HistoryAppointments = () => {
       }
 
       const res = await fetch(
-        `http://localhost:8000/api/appointments/delete`,
+        `${API_URL}appointments/delete`,
         {
           headers: {
             "Content-Type": "application/json",

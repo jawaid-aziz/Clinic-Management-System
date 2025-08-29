@@ -6,6 +6,8 @@ import { Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useRole } from "@/context/RoleProvider";
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 export const PendingAppointments = () => {
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -17,7 +19,7 @@ export const PendingAppointments = () => {
     const fetchAppointments = async () => {
       try {
         const res = await fetch(
-          `http://localhost:8000/api/appointments/pending?role=${role}`
+          `${API_URL}appointments/pending?role=${role}`
         );
         const data = await res.json();
         setAppointments(data.data || []);

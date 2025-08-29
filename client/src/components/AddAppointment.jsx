@@ -12,6 +12,8 @@ import {
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 export const AddAppointment = () => {
   const [form, setForm] = useState({
     mrn: "",
@@ -38,7 +40,7 @@ export const AddAppointment = () => {
 
   const handleSubmit = async () => {
     try {
-      const res = await fetch("http://localhost:8000/api/appointments/add", {
+      const res = await fetch(`${API_URL}appointments/add`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

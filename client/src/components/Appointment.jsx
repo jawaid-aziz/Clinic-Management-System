@@ -10,6 +10,8 @@ import html2canvas from "html2canvas-pro";
 import jsPDF from "jspdf";
 import { useNavigate } from "react-router-dom";
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 export const Appointment = () => {
   const { id } = useParams();
   const [appointment, setAppointment] = useState(null);
@@ -35,7 +37,7 @@ export const Appointment = () => {
   useEffect(() => {
     const fetchAppointment = async () => {
       try {
-        const res = await fetch(`http://localhost:8000/api/appointments/${id}`);
+        const res = await fetch(`${API_URL}appointments/${id}`);
         const data = await res.json();
 
         if (data.success) {
@@ -58,7 +60,7 @@ export const Appointment = () => {
   const handleSaveTimes = async () => {
     try {
       const res = await fetch(
-        `http://localhost:8000/api/appointments/${id}/time`,
+        `${API_URL}appointments/${id}/time`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -218,7 +220,7 @@ export const Appointment = () => {
       }
       console.log(formData.get("mrn"));
       const res = await fetch(
-        "http://localhost:8000/api/appointments/prescription",
+        `${API_URL}appointments/prescription`,
         {
           method: "POST",
           body: formData,
