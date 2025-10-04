@@ -2,15 +2,15 @@ const mongoose = require("mongoose");
 
 const prescriptionSchema = new mongoose.Schema({
   mrn: {
-    type: String,  // store MRN as string
-    required: true,
-  },
-  fileName: {
     type: String,
     required: true,
   },
-  filePath: {
-    type: String,
+  cloudinaryId: {
+    type: String, // Cloudinary public_id (useful if you want to delete/update later)
+    required: true,
+  },
+  url: {
+    type: String, // Secure Cloudinary URL
     required: true,
   },
 });

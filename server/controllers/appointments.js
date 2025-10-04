@@ -3,6 +3,7 @@ const path = require("path");
 const fs = require("fs");
 const multer = require("multer");
 const Prescription = require("../models/Prescription");
+const cloudinary = require("../config/cloudinary");
 
 // Search by MRN, Name, or Phone
 async function searchAppointment(req, res) {
@@ -203,46 +204,57 @@ async function updateAppointmentTime(req, res) {
   }
 }
 
-// Create folder if not exists
-const prescriptionsDir = path.join(__dirname, "../Prescriptions");
-if (!fs.existsSync(prescriptionsDir)) {
-  fs.mkdirSync(prescriptionsDir);
-}
+// // Create folder if not exists
+// const prescriptionsDir = path.join(__dirname, "../Prescriptions");
+// if (!fs.existsSync(prescriptionsDir)) {
+//   fs.mkdirSync(prescriptionsDir);
+// }
 
-// Configure multer storage
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, prescriptionsDir);
-  },
-  filename: function (req, file, cb) {
-    const { mrn } = req.body;
-    if (!mrn) {
-      return cb(new Error("MRN is required"), null);
+// // Configure multer storage
+// const storage = multer.diskStorage({
+//   destination: function (req, file, cb) {
+//     cb(null, prescriptionsDir);
+//   },
+//   filename: function (req, file, cb) {
+//     const { mrn } = req.body;
+//     if (!mrn) {
+//       return cb(new Error("MRN is required"), null);
+//     }
+
+//       // 🔒 Sanitize MRN (remove slashes, spaces, weird chars)
+//   const safeMrn = mrn.replace(/[^a-zA-Z0-9_-]/g, "_");
+
+//     const filePath = path.join(prescriptionsDir, `${safeMrn}.pdf`);
+
+//     // ✅ If file exists, delete it first
+//     if (fs.existsSync(filePath)) {
+//       fs.unlinkSync(filePath);
+//     }
+
+//     cb(null, `${safeMrn}.pdf`);
+//   },
+// });
+
+// const fileFilter = (req, file, cb) => {
+//   if (file.mimetype === "application/pdf") {
+//     cb(null, true);
+//   } else {
+//     cb(new Error("Only PDF files are allowed"), false);
+//   }
+// };
+
+// const upload = multer({ storage, fileFilter });
+
+const upload = multer({
+  storage: multer.memoryStorage(), // keep file in memory
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype === "application/pdf") {
+      cb(null, true);
+    } else {
+      cb(new Error("Only PDF files are allowed"), false);
     }
-
-      // 🔒 Sanitize MRN (remove slashes, spaces, weird chars)
-  const safeMrn = mrn.replace(/[^a-zA-Z0-9_-]/g, "_");
-
-    const filePath = path.join(prescriptionsDir, `${safeMrn}.pdf`);
-
-    // ✅ If file exists, delete it first
-    if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath);
-    }
-
-    cb(null, `${safeMrn}.pdf`);
   },
 });
-
-const fileFilter = (req, file, cb) => {
-  if (file.mimetype === "application/pdf") {
-    cb(null, true);
-  } else {
-    cb(new Error("Only PDF files are allowed"), false);
-  }
-};
-
-const upload = multer({ storage, fileFilter });
 
 // Controller to handle prescription upload
 async function uploadPrescription(req, res) {
@@ -257,14 +269,34 @@ async function uploadPrescription(req, res) {
       });
     }
 
-    // Save record in DB
-    const prescription = new Prescription({
-      mrn,
-      fileName: req.file.filename,
-      filePath: `/Prescriptions/${req.file.filename}`,
+    // 🔼 Upload buffer to Cloudinary
+    const uploadResult = await new Promise((resolve, reject) => {
+      cloudinary.uploader
+        .upload_stream(
+          {
+            resource_type: "raw", // important for PDFs!
+            folder: "prescriptions", // Cloudinary folder
+            public_id: mrn, // make MRN the filename
+            overwrite: true, // replace if exists
+            format: "pdf", // ensure PDF format
+          },
+          (error, result) => {
+            if (error) reject(error);
+            else resolve(result);
+          }
+        )
+        .end(req.file.buffer); // send file buffer
     });
 
-    await prescription.save();
+    // 🧠 Upsert (create or update) prescription in DB
+    const prescription = await Prescription.findOneAndUpdate(
+      { mrn },
+      {
+        cloudinaryId: uploadResult.public_id,
+        url: uploadResult.secure_url,
+      },
+      { upsert: true, new: true } // create if not found, return updated doc
+    );
 
     // ⬇️ Update appointment with the template used
     await Appointment.findOneAndUpdate(
@@ -309,21 +341,31 @@ async function getPrescription(req, res) {
       });
     }
 
-    // Build file path
-    const filePath = path.join(__dirname, "../Prescriptions", prescription.fileName);
+//     // Build file path
+//     const filePath = path.join(__dirname, "../Prescriptions", prescription.fileName);
 
-    // Check if file exists on disk
-    if (!fs.existsSync(filePath)) {
-      return res.status(404).json({
-        success: false,
-        message: "Prescription file not found on server",
-      });
-    }
+//     // Check if file exists on disk
+//     if (!fs.existsSync(filePath)) {
+//       return res.status(404).json({
+//         success: false,
+//         message: "Prescription file not found on server",
+//       });
+//     }
 
-// ✅ Explicitly set inline viewing
-res.type("pdf");
-res.setHeader("Content-Disposition", `inline; filename="${prescription.fileName}"`);
-return res.sendFile(filePath);
+    // ✅ Generate a signed inline URL
+    const signedUrl = cloudinary.url(prescription.url, {
+      // resource_type: "raw",
+      // type: "upload",
+      // folder: "prescriptions",
+      // format: "pdf",
+      sign_url: true,    // important for signed access
+    });
+
+// // ✅ Explicitly set inline viewing
+// res.type("pdf");
+// res.setHeader("Content-Disposition", `inline; filename="${prescription.mrn}"`);
+return res.redirect(signedUrl);
+
   } catch (error) {
     console.error("Error fetching prescription:", error);
     res.status(500).json({
@@ -358,11 +400,15 @@ async function deleteAppointment(req, res) {
     // 2. Find prescription (if any)
     const prescription = await Prescription.findOneAndDelete({ mrn });
     
+    // 3. If prescription exists, also delete from Cloudinary
     if (prescription) {
-      // 3. Delete file from disk if it exists
-      const filePath = path.join(__dirname, "../Prescriptions", prescription.fileName);
-      if (fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath);
+      try {
+        await cloudinary.uploader.destroy(prescription.cloudinaryId, {
+          resource_type: "raw", // important for PDFs
+        });
+        console.log(`Deleted prescription from Cloudinary: ${prescription.cloudinaryId}`);
+      } catch (cloudErr) {
+        console.error("Failed to delete from Cloudinary:", cloudErr);
       }
     }
 
