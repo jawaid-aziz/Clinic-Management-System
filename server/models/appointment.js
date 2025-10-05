@@ -68,8 +68,26 @@ const appointmentSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ["Pending", "Completed", "Cancelled"], // restrict to known values
-    default: "Pending", // default status
+    enum: ["Pending", "Completed", "Cancelled"],
+    default: "Pending",
+  },
+  labLocation: {
+    type: String,
+    enum: ["InHouse", "Outsource"],
+    default: null,
+  },
+  labs: {
+    type: Array,
+    default: [],
+  },
+  labCollection: {
+    type: String,
+    enum: ["Pending", "Completed"],
+    default: null,
+  },
+  labReportDate: {
+    type: Date,
+    default: null,
   },
   template: {
     type: String,

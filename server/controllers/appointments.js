@@ -73,18 +73,18 @@ async function addAppointment(req, res) {
 // Get all pending appointments
 async function pendingAppointments(req, res) {
   try {
-  const { role } = req.query; // role will come from frontend query param
+    const { role } = req.query; // role will come from frontend query param
 
-  // Build filter dynamically
-  const filter = { status: "Pending" };
-if (role === "gynae" || role === "paediatrics") {
-  filter.doctor = role; // assuming Appointment schema has "doctor"
-}
+    // Build filter dynamically
+    const filter = { status: "Pending" };
+    if (role === "gynae" || role === "paediatrics") {
+      filter.doctor = role; // assuming Appointment schema has "doctor"
+    }
 
-  const appointments = await Appointment.find(filter).sort({
-    date: 1,
-    timeIn: 1,
-  });
+    const appointments = await Appointment.find(filter).sort({
+      date: 1,
+      timeIn: 1,
+    });
 
     res.status(200).json({
       success: true,
@@ -201,6 +201,48 @@ async function updateAppointmentTime(req, res) {
       message: "Failed to update appointment",
       error: error.message,
     });
+  }
+}
+
+async function saveLabTests(req, res) {
+  try {
+    const { id } = req.params;
+    const { labType, selectedTests } = req.body;
+
+    if (!labType || !selectedTests || selectedTests.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Lab Tests are required.",
+      });
+    }
+
+    const updatedAppointment = await Appointment.findByIdAndUpdate(
+      id,
+      { labLocation: labType, labs: selectedTests, labCollection: "Pending" },
+      { new: true } // return updated doc
+    );
+
+    if (!updatedAppointment) {
+      return res.status(404).json({
+        success: false,
+        message: "Appointment not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Lab Tests saved successfully",
+      data: updatedAppointment,
+    });
+
+  } catch (error) {
+    console.error("Error saving lab tests:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to save lab tests",
+      error: error.message,
+    });
+    console.log(error);
   }
 }
 
@@ -341,16 +383,16 @@ async function getPrescription(req, res) {
       });
     }
 
-//     // Build file path
-//     const filePath = path.join(__dirname, "../Prescriptions", prescription.fileName);
+    //     // Build file path
+    //     const filePath = path.join(__dirname, "../Prescriptions", prescription.fileName);
 
-//     // Check if file exists on disk
-//     if (!fs.existsSync(filePath)) {
-//       return res.status(404).json({
-//         success: false,
-//         message: "Prescription file not found on server",
-//       });
-//     }
+    //     // Check if file exists on disk
+    //     if (!fs.existsSync(filePath)) {
+    //       return res.status(404).json({
+    //         success: false,
+    //         message: "Prescription file not found on server",
+    //       });
+    //     }
 
     // ✅ Generate a signed inline URL
     const signedUrl = cloudinary.url(prescription.url, {
@@ -361,10 +403,10 @@ async function getPrescription(req, res) {
       sign_url: true,    // important for signed access
     });
 
-// // ✅ Explicitly set inline viewing
-// res.type("pdf");
-// res.setHeader("Content-Disposition", `inline; filename="${prescription.mrn}"`);
-return res.redirect(signedUrl);
+    // // ✅ Explicitly set inline viewing
+    // res.type("pdf");
+    // res.setHeader("Content-Disposition", `inline; filename="${prescription.mrn}"`);
+    return res.redirect(signedUrl);
 
   } catch (error) {
     console.error("Error fetching prescription:", error);
@@ -399,7 +441,7 @@ async function deleteAppointment(req, res) {
 
     // 2. Find prescription (if any)
     const prescription = await Prescription.findOneAndDelete({ mrn });
-    
+
     // 3. If prescription exists, also delete from Cloudinary
     if (prescription) {
       try {
@@ -440,5 +482,6 @@ module.exports = {
   upload,
   searchAppointment,
   getPrescription,
-  deleteAppointment
+  deleteAppointment,
+  saveLabTests
 };

@@ -5,11 +5,24 @@ import { Separator } from "@/components/ui/separator";
 import { Loader2 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import { renderAsync } from "docx-preview";
 import html2canvas from "html2canvas-pro";
 import jsPDF from "jspdf";
 import { useNavigate } from "react-router-dom";
-
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
+import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+} from "@/components/ui/popover";
 const API_URL = import.meta.env.VITE_API_URL;
 
 export const Appointment = () => {
@@ -23,6 +36,31 @@ export const Appointment = () => {
   const [timeIn, setTimeIn] = useState("");
   const [timeOut, setTimeOut] = useState("");
   const navigate = useNavigate();
+
+  const [labType, setLabType] = useState("");
+  const [selectedTests, setSelectedTests] = useState([]);
+
+  const inHouseTests = [
+    "CBC (Complete Blood Count) Basic Hematology",
+    "Blood Sugar Random/Fasting",
+    "HBsAg screening",
+    "Anti HCV (Screening, ICT)",
+    "Anti HIV - 1 & 2",
+    "Hemoglobin",
+    "Blood Group"
+  ];
+  const outSourceTests = [
+    "ICT malaria",
+    "LFTs",
+    "RFTs",
+    "Blood Urea",
+    "ALT",
+    "Serum Creatinine",
+    "AST",
+    "ALP",
+    "Serum Uric Acid",
+    "VDRL (Syphilis)"
+  ];
 
   const formatToAMPM = (timeStr) => {
     let [hour, minute] = timeStr.split(":").map(Number);
@@ -59,14 +97,11 @@ export const Appointment = () => {
 
   const handleSaveTimes = async () => {
     try {
-      const res = await fetch(
-        `${API_URL}appointments/${id}/time`,
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ timeIn, timeOut }),
-        }
-      );
+      const res = await fetch(`${API_URL}appointments/${id}/time`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ timeIn, timeOut }),
+      });
 
       const data = await res.json();
       if (data.success) {
@@ -83,6 +118,31 @@ export const Appointment = () => {
     } catch (err) {
       console.error(err);
       alert("Something went wrong while saving times.");
+    }
+  };
+  
+  const saveLabTests = async () => {
+    if (!labType || selectedTests.length === 0) {
+      alert("Please select lab type and tests.");
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API_URL}appointments/${id}/saveLabTests`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ labType, selectedTests }),
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        alert("Lab tests saved successfully!");
+      } else {
+        alert(data.message || "Failed to save lab tests");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Something went wrong while saving lab tests.");
     }
   };
 
@@ -219,13 +279,10 @@ export const Appointment = () => {
         formData.append("templateName", selectedTemplate.name);
       }
       console.log(formData.get("mrn"));
-      const res = await fetch(
-        `${API_URL}appointments/prescription`,
-        {
-          method: "POST",
-          body: formData,
-        }
-      );
+      const res = await fetch(`${API_URL}appointments/prescription`, {
+        method: "POST",
+        body: formData,
+      });
 
       const data = await res.json();
       if (data.success) {
@@ -356,6 +413,80 @@ export const Appointment = () => {
             <Button onClick={handleSaveTimes}>Save Times</Button>
           </div>
 
+          <Separator />
+
+          {/* ✅ Lab Type Selection */}
+          <div>
+            <label className="text-xs font-semibold mb-1 block">
+              Select Lab
+            </label>
+            <Select
+              value={labType}
+              onValueChange={(val) => {
+                setLabType(val);
+                setSelectedTests([]);
+              }}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Choose Lab Type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="InHouse">InHouse</SelectItem>
+                <SelectItem value="Outsource">Outsource</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* ✅ Dynamic Test Selection */}
+          {labType && (
+            <div>
+              <label className="text-xs font-semibold mb-1 block">
+                Select Tests ({labType})
+              </label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="w-full justify-between text-left font-normal"
+                  >
+                    {selectedTests.length > 0
+                      ? selectedTests.join(", ")
+                      : "Choose Tests"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[300px] p-3 space-y-2">
+                  {(labType === "InHouse" ? inHouseTests : outSourceTests).map(
+                    (test) => (
+                      <div key={test} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={test}
+                          checked={selectedTests.includes(test)}
+                          onCheckedChange={(checked) => {
+                            setSelectedTests((prev) =>
+                              checked
+                                ? [...prev, test]
+                                : prev.filter((t) => t !== test)
+                            );
+                          }}
+                        />
+                        <Label
+                          htmlFor={test}
+                          className="text-sm cursor-pointer select-none"
+                        >
+                          {test}
+                        </Label>
+                      </div>
+                    )
+                  )}
+                </PopoverContent>
+              </Popover>
+            </div>
+          )}
+          {labType && selectedTests.length > 0 && (
+          <div className="flex gap-2 mt-2">
+            <Button onClick={saveLabTests}>Save Lab Tests</Button>
+          </div>
+          )}
           <Separator />
 
           <div className="text-sm space-x-2">

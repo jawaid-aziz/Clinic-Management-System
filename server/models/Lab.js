@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const prescriptionSchema = new mongoose.Schema({
+const labSchema = new mongoose.Schema({
   mrn: {
     type: String,
     required: true,
@@ -15,4 +15,4 @@ const prescriptionSchema = new mongoose.Schema({
   },
 });
 
-module.exports = mongoose.model("Prescription", prescriptionSchema);
+module.exports = mongoose.model("Lab", labSchema);
