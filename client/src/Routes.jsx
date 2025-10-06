@@ -7,6 +7,7 @@ import { PendingAppointments } from "./components/PendingAppointments";
 import { HistoryAppointments } from "./components/HistoryAppointments";
 import { Appointment } from "./components/Appointment";
 import { Settings } from "./components/Settings";
+import { ShowLab } from "./components/ShowLab";
 
 export const AllRoutes = [
   {
@@ -40,6 +41,10 @@ export const AllRoutes = [
           {
             path: "/appointment/:id",
             element: <Appointment />,
+          },
+          {
+            path: "/show-lab/:id",
+            element: <ShowLab />,
           },
           {
             path: "/settings",

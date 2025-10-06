@@ -98,9 +98,7 @@ export const HistoryAppointments = () => {
     setError("");
     try {
       const res = await fetch(
-        `${API_URL}appointments/search?query=${encodeURIComponent(
-          searchQuery
-        )}`
+        `${API_URL}appointments/search?query=${encodeURIComponent(searchQuery)}`
       );
       const data = await res.json();
 
@@ -120,14 +118,11 @@ export const HistoryAppointments = () => {
 
   const handleSaveTimes = async (id) => {
     try {
-      const res = await fetch(
-        `${API_URL}appointments/${id}/time`,
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ timeIn, timeOut }),
-        }
-      );
+      const res = await fetch(`${API_URL}appointments/${id}/time`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ timeIn, timeOut }),
+      });
 
       const data = await res.json();
       if (data.success) {
@@ -274,13 +269,10 @@ export const HistoryAppointments = () => {
         formData.append("templateName", selectedTemplate.name);
       }
 
-      const res = await fetch(
-        `${API_URL}appointments/prescription`,
-        {
-          method: "POST",
-          body: formData,
-        }
-      );
+      const res = await fetch(`${API_URL}appointments/prescription`, {
+        method: "POST",
+        body: formData,
+      });
 
       const data = await res.json();
       if (data.success) {
@@ -308,9 +300,7 @@ export const HistoryAppointments = () => {
 
       // Open in new tab directly
       window.open(
-        `${API_URL}appointments/openPrescription/${encodeURIComponent(
-          mrn
-        )}`,
+        `${API_URL}appointments/openPrescription/${encodeURIComponent(mrn)}`,
         "_blank"
       );
     } catch (error) {
@@ -326,16 +316,13 @@ export const HistoryAppointments = () => {
         return;
       }
 
-      const res = await fetch(
-        `${API_URL}appointments/delete`,
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ mrn }),
-          method: "POST",
-        }
-      );
+      const res = await fetch(`${API_URL}appointments/delete`, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ mrn }),
+        method: "POST",
+      });
 
       const data = await res.json();
       if (data.success) {
@@ -348,6 +335,10 @@ export const HistoryAppointments = () => {
       console.error("Error deleting record:", error);
       alert("Failed to delete record");
     }
+  };
+
+  const handleViewLab = async (id) => {
+    navigate(`/show-lab/${id}`);
   };
 
   return (
@@ -606,13 +597,22 @@ export const HistoryAppointments = () => {
                   Delete
                 </Button>
 
-                <Button
-                  onClick={() =>
-                    handleViewPrescription(selectedAppointment.mrn)
-                  }
-                >
-                  View Prescription
-                </Button>
+                <div className="flex gap-2">
+                  {selectedAppointment.labCollection != null && (
+                    <Button
+                      onClick={() => handleViewLab(selectedAppointment._id)}
+                    >
+                      View Lab
+                    </Button>
+                  )}
+                  <Button
+                    onClick={() =>
+                      handleViewPrescription(selectedAppointment.mrn)
+                    }
+                  >
+                    View Prescription
+                  </Button>
+                </div>
               </div>
             </div>
           )}
