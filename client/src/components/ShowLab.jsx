@@ -7,10 +7,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+} from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
+import html2canvas from "html2canvas-pro";
+import jsPDF from "jspdf";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -41,7 +47,7 @@ export const ShowLab = () => {
   const [appointment, setAppointment] = useState(null);
   const [labResults, setLabResults] = useState({});
   const { id } = useParams();
-const [reportDate, setReportDate] = useState(null);
+  const [reportDate, setReportDate] = useState(null);
 
   useEffect(() => {
     const fetchAppointment = async () => {
@@ -81,6 +87,177 @@ const [reportDate, setReportDate] = useState(null);
       test !== "Blood Group"
     );
   };
+
+const handleGenerateLabReport = async () => {
+  if (!appointment) {
+    alert("Appointment data not loaded yet!");
+    return;
+  }
+
+  // Create hidden container
+  const hiddenDiv = document.createElement("div");
+  hiddenDiv.style.padding = "40px";
+  hiddenDiv.style.fontFamily = "Arial, sans-serif";
+  hiddenDiv.style.fontSize = "10pt";
+  hiddenDiv.style.lineHeight = "1.5";
+  hiddenDiv.style.width = "700px";
+  hiddenDiv.style.margin = "auto";
+  hiddenDiv.style.position = "absolute";
+  hiddenDiv.style.left = "-9999px";
+  hiddenDiv.style.top = "0";
+
+  // Construct HTML
+  hiddenDiv.innerHTML = `
+  <div style="text-align:center; border-bottom:3px solid #000; padding-bottom:10px;">
+    <h1 style="margin:0; font-size:18pt; font-weight:bold; color:#1a1a1a;">Family Care Hospital</h1>
+    <h2 style="margin:5px 0 0 0; font-size:14pt; font-weight:bold; color:#b30000; text-transform:uppercase;">Clinical Laboratory</h2>
+    <p style="margin:5px 0 0 0; font-style:italic; font-size:10pt;">"Determined to serve humanity"</p>
+  </div>
+
+  <div style="margin-top:10px; display:grid; grid-template-columns:repeat(2,1fr); gap:4px; font-size:10pt;">
+    <p><strong>MRN:</strong> ${appointment.mrn}</p>
+    <p><strong>Date:</strong> ${reportDate ? format(reportDate, "PPP") : new Date().toLocaleDateString()}</p>
+    <p><strong>Name:</strong> ${appointment.name}</p>
+    <p><strong>Doctor:</strong> ${appointment.doctor || "-"}</p>
+    <p><strong>Age:</strong> ${appointment.age || "-"}</p>
+    <p><strong>Sex:</strong> ${appointment.sex || "-"}</p>
+    <p><strong>Phone:</strong> ${appointment.phone || "-"}</p>
+    <p><strong>CNIC:</strong> ${appointment.cnic || "-"}</p>
+  </div>
+
+  <hr style="margin:8px 0; border:0; border-top:1px solid #000;" />
+
+  <div style="margin-top:15px; font-size:10pt;">
+    ${appointment.labs
+      .map((test) => {
+        if (test === "CBC (Complete Blood Count) Basic Hematology") {
+          return `
+          <div style="margin-bottom:20px; page-break-inside:avoid;">
+            <h3 style="margin:0; font-size:12pt; font-weight:bold; text-decoration:underline;">CBC (Complete Blood Count)</h3>
+            <table style="width:100%; border-collapse:collapse; margin-top:8px;">
+              <thead>
+                <tr style="background-color:#f5f5f5;">
+                  <th style="border:1px solid #000; padding:5px; text-align:left;">Test</th>
+                  <th style="border:1px solid #000; padding:5px; text-align:left;">Result</th>
+                  <th style="border:1px solid #000; padding:5px; text-align:left;">Normal Range</th>
+                  <th style="border:1px solid #000; padding:5px; text-align:left;">Unit</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${[
+                  { name: "HB", range: "11.5 - 14.5", unit: "g/dl" },
+                  { name: "Total RBC", range: "4 - 6", unit: "x10^12/l" },
+                  { name: "HCT", range: "32 - 46", unit: "%" },
+                  { name: "MCV", range: "75 - 85", unit: "fl" },
+                  { name: "MCH", range: "26 - 32", unit: "pg" },
+                  { name: "MCHC", range: "30 - 35", unit: "g/dl" },
+                  { name: "Platelets", range: "140 - 450", unit: "x10^3/µL" },
+                  { name: "WBC", range: "6 - 13", unit: "10^3/µl" },
+                  { name: "Neutrophils", range: "20 - 75", unit: "%" },
+                  { name: "Lymphocytes", range: "30 - 75", unit: "%" },
+                  { name: "Eosinophils", range: "1 - 5", unit: "%" },
+                  { name: "Monocytes", range: "2 - 6", unit: "%" },
+                ]
+                  .map(
+                    (row) => `
+                  <tr>
+                    <td style="border:1px solid #000; padding:5px;">${row.name}</td>
+                    <td style="border:1px solid #000; padding:5px;">${
+                      labResults[row.name] || "-"
+                    }</td>
+                    <td style="border:1px solid #000; padding:5px;">${
+                      row.range
+                    }</td>
+                    <td style="border:1px solid #000; padding:5px;">${
+                      row.unit
+                    }</td>
+                  </tr>`
+                  )
+                  .join("")}
+              </tbody>
+            </table>
+          </div>`;
+        } else if (test === "Blood Group") {
+          return `
+          <div style="margin-bottom:20px; page-break-inside:avoid;">
+            <h3 style="margin:0; font-size:12pt; font-weight:bold; text-decoration:underline;">Blood Group</h3>
+            <table style="width:100%; border-collapse:collapse; margin-top:8px;">
+              <tr>
+                <th style="border:1px solid #000; padding:5px;">ABO Group</th>
+                <th style="border:1px solid #000; padding:5px;">Rhesus (Rh)</th>
+              </tr>
+              <tr>
+                <td style="border:1px solid #000; padding:5px;">${labResults["ABO Group"] || "-"}</td>
+                <td style="border:1px solid #000; padding:5px;">${labResults["Rhesus"] || "-"}</td>
+              </tr>
+            </table>
+          </div>`;
+        } else {
+          return `
+          <div style="margin-bottom:20px; page-break-inside:avoid;">
+            <h3 style="margin:0; font-size:12pt; font-weight:bold; text-decoration:underline;">${test}</h3>
+            <table style="width:100%; border-collapse:collapse; margin-top:8px;">
+              <tr>
+                <th style="border:1px solid #000; padding:5px;">Result</th>
+                <td style="border:1px solid #000; padding:5px;">${
+                  labResults[test] || "-"
+                }</td>
+              </tr>
+            </table>
+          </div>`;
+        }
+      })
+      .join("")}
+  </div>
+
+  <!-- ✅ FOOTER SECTION -->
+  <div style="margin-top:40px; border-top:2px solid #000; padding-top:10px; text-align:center; font-size:10pt;">
+    <div style="display:flex; justify-content:space-around; flex-wrap:wrap; text-align:center; gap:8px;">
+      <div><strong>Dr. Ejaz Mazari</strong><br/>MBBS, FCPS<br/><em>Child Specialist</em></div>
+      <div><strong>Dr. Saima Ejaz</strong><br/>MBBS</div>
+      <div><strong>Sadaf Raheem</strong><br/><em>Lab Technologist</em></div>
+    </div>
+    <hr style="margin:10px 0; border:0; border-top:1px solid #999; width:80%; margin-left:auto; margin-right:auto;" />
+    <p style="margin:4px 0;">📞 <strong>0333-6438402</strong></p>
+    <p style="margin:2px 0; font-size:9pt;">🏥 Qutub Canal Link Road, Rajanpur</p>
+  </div>
+  `;
+
+  document.body.appendChild(hiddenDiv);
+
+  try {
+    await new Promise((r) => setTimeout(r, 200));
+    const canvas = await html2canvas(hiddenDiv, { scale: 2, useCORS: true });
+
+    const imgData = canvas.toDataURL("image/jpeg");
+    const pdf = new jsPDF("p", "mm", "a4");
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    const imgHeight = (canvas.height * pageWidth) / canvas.width;
+
+    let heightLeft = imgHeight;
+    let position = 0;
+
+    pdf.addImage(imgData, "JPEG", 0, position, pageWidth, imgHeight);
+    heightLeft -= pageHeight;
+
+    while (heightLeft > 0) {
+      position = heightLeft - imgHeight;
+      pdf.addPage();
+      pdf.addImage(imgData, "JPEG", 0, position, pageWidth, imgHeight);
+      heightLeft -= pageHeight;
+    }
+
+    pdf.save(`Lab_Report_${appointment.mrn}.pdf`);
+  } catch (err) {
+    console.error("Error generating lab report:", err);
+    alert("Failed to generate lab report");
+  } finally {
+    document.body.removeChild(hiddenDiv);
+  }
+};
+
+
 
   return (
     <div className="p-6 max-w-3xl mx-auto">
@@ -353,37 +530,42 @@ const [reportDate, setReportDate] = useState(null);
                 {appointment.labCollection}
               </Badge>
             </p>
-<div className="flex items-center gap-2">
-  <Label className="font-semibold">Report Date:</Label>
-  {appointment.labReportDate ? (
-    <span>
-      {new Date(appointment.labReportDate).toLocaleDateString()}
-    </span>
-  ) : (
-    <Popover>
-      <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          className={`w-[200px] justify-start text-left font-normal ${
-            !reportDate && "text-muted-foreground"
-          }`}
-        >
-          <CalendarIcon className="mr-2 h-4 w-4" />
-          {reportDate ? format(reportDate, "PPP") : <span>Pick a date</span>}
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-auto p-0" align="start">
-        <Calendar
-          mode="single"
-          selected={reportDate}
-          onSelect={setReportDate}
-          initialFocus
-        />
-      </PopoverContent>
-    </Popover>
-  )}
-</div>
+            <Button onClick={handleGenerateLabReport}>Generate PDF Report</Button>
 
+            <div className="flex items-center gap-2">
+              <Label className="font-semibold">Report Date:</Label>
+              {appointment.labReportDate ? (
+                <span>
+                  {new Date(appointment.labReportDate).toLocaleDateString()}
+                </span>
+              ) : (
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={`w-[200px] justify-start text-left font-normal ${
+                        !reportDate && "text-muted-foreground"
+                      }`}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {reportDate ? (
+                        format(reportDate, "PPP")
+                      ) : (
+                        <span>Pick a date</span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={reportDate}
+                      onSelect={setReportDate}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+              )}
+            </div>
           </div>
         </CardContent>
       </Card>
