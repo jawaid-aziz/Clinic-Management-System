@@ -88,14 +88,14 @@ export const ShowLab = () => {
     );
   };
 
-const handleGenerateLabReport = async () => {
-  if (!appointment) {
-    alert("Appointment data not loaded yet!");
-    return;
-  }
+  const handleGenerateLabReport = async () => {
+    if (!appointment) {
+      alert("Appointment data not loaded yet!");
+      return;
+    }
 
-  // Helper: Header, Patient Info, Footer HTML (kept identical for both pages)
-  const headerHTML = `
+    // Helper: Header, Patient Info, Footer HTML (kept identical for both pages)
+    const headerHTML = `
     <div style="text-align:center; border-bottom:2px solid #000; padding-bottom:6px;">
       <h1 style="margin:0; font-size:18pt; font-weight:bold; color:#1a1a1a; white-space:pre;">Family Care Hospital</h1>
       <h2 style="margin:5px 0 0 0; font-size:13pt; font-weight:bold; color:#b30000; text-transform:uppercase; white-space:pre;">Clinical  Laboratory</h2>
@@ -103,7 +103,9 @@ const handleGenerateLabReport = async () => {
     </div>
     <div style="margin-top:8px; display:grid; grid-template-columns:repeat(2,1fr); font-size:9pt;">
       <p><strong>MRN:</strong> ${appointment.mrn}</p>
-      <p><strong>Date:</strong> ${reportDate ? format(reportDate, "PPP") : new Date().toLocaleDateString()}</p>
+      <p><strong>Date:</strong> ${
+        reportDate ? format(reportDate, "PPP") : new Date().toLocaleDateString()
+      }</p>
       <p><strong>Name:</strong> ${appointment.name}</p>
       <p><strong>Doctor:</strong> ${appointment.doctor || "-"}</p>
       <p><strong>Age:</strong> ${appointment.age || "-"}</p>
@@ -113,7 +115,7 @@ const handleGenerateLabReport = async () => {
     </div>
   `;
 
-  const footerHTML = `
+    const footerHTML = `
     <div style="margin-top:auto; border-top:2px solid #000; padding-top:10px; text-align:center; font-size:9pt;">
       <div style="display:flex; justify-content:space-around; flex-wrap:wrap; gap:10px;">
         <div><strong>Dr. Ejaz  Mazari</strong><br/>MBBS, FCPS<br/><em>Child Specialist</em></div>
@@ -126,9 +128,11 @@ const handleGenerateLabReport = async () => {
     </div>
   `;
 
-  // Build test sections
-  const cbcTest = appointment.labs.includes("CBC (Complete Blood Count) Basic Hematology")
-    ? `
+    // Build test sections
+    const cbcTest = appointment.labs.includes(
+      "CBC (Complete Blood Count) Basic Hematology"
+    )
+      ? `
       <div style="margin-bottom:20px;">
         <h3 style="margin:0; font-size:12pt; font-weight:bold; text-decoration:underline;">CBC  (Complete  Blood  Count )</h3>
         <table style="width:100%; border-collapse:collapse; margin-top:8px; font-size:9pt;">
@@ -159,8 +163,12 @@ const handleGenerateLabReport = async () => {
                 (row) => `
               <tr>
                 <td style="border:1px solid #000; padding:4px;">${row.name}</td>
-                <td style="border:1px solid #000; padding:4px;">${labResults[row.name] || "-"}</td>
-                <td style="border:1px solid #000; padding:4px;">${row.range}</td>
+                <td style="border:1px solid #000; padding:4px;">${
+                  labResults[row.name] || "-"
+                }</td>
+                <td style="border:1px solid #000; padding:4px;">${
+                  row.range
+                }</td>
                 <td style="border:1px solid #000; padding:4px;">${row.unit}</td>
               </tr>`
               )
@@ -168,13 +176,13 @@ const handleGenerateLabReport = async () => {
           </tbody>
         </table>
       </div>`
-    : "";
+      : "";
 
-  const otherTests = appointment.labs
-    .filter((t) => t !== "CBC (Complete Blood Count) Basic Hematology")
-    .map((test) => {
-      if (test === "Blood Group") {
-        return `
+    const otherTests = appointment.labs
+      .filter((t) => t !== "CBC (Complete Blood Count) Basic Hematology")
+      .map((test) => {
+        if (test === "Blood Group") {
+          return `
         <div style="margin-bottom:18px;">
           <h3 style="margin:0; font-size:11pt; font-weight:bold; text-decoration:underline;">Blood  Group</h3>
           <table style="width:100%; border-collapse:collapse; margin-top:6px;">
@@ -183,74 +191,84 @@ const handleGenerateLabReport = async () => {
               <th style="border:1px solid #000; padding:5px;">Rhesus  ( Rh )</th>
             </tr>
             <tr>
-              <td style="border:1px solid #000; padding:5px;">${labResults["ABO Group"] || "-"}</td>
-              <td style="border:1px solid #000; padding:5px;">${labResults["Rhesus"] || "-"}</td>
+              <td style="border:1px solid #000; padding:5px;">${
+                labResults["ABO Group"] || "-"
+              }</td>
+              <td style="border:1px solid #000; padding:5px;">${
+                labResults["Rhesus"] || "-"
+              }</td>
             </tr>
           </table>
         </div>`;
-      } else {
-        return `
+        } else {
+          return `
         <div style="margin-bottom:15px;">
           <h3 style="margin:0; font-size:11pt; font-weight:bold; text-decoration:underline;">${test}</h3>
           <table style="width:100%; border-collapse:collapse; margin-top:6px;">
             <tr>
               <th style="border:1px solid #000; padding:5px;">Result</th>
-              <td style="border:1px solid #000; padding:5px;">${labResults[test] || "-"}</td>
+              <td style="border:1px solid #000; padding:5px;">${
+                labResults[test] || "-"
+              }</td>
             </tr>
           </table>
         </div>`;
+        }
+      })
+      .join("");
+
+    // 🔹 Page 1 (CBC)
+    const page1 = `
+    <div style="width:700px; height:950px; border:1px solid #000; display:flex; flex-direction:column; justify-content:space-between; padding:30px; box-sizing:border-box;">
+      ${headerHTML}
+      <div style="flex:1; display:flex; align-items:center; justify-content:center;">
+        <div style="width:100%;">${
+          cbcTest || "<p style='text-align:center;'>No CBC Test Available</p>"
+        }</div>
+      </div>
+      ${footerHTML}
+    </div>
+  `;
+
+    // 🔹 Page 2 (Other Tests)
+    const page2 = `
+    <div style="width:700px; height:950px; border:1px solid #000; display:flex; flex-direction:column; justify-content:space-between; padding:30px; box-sizing:border-box;">
+      ${headerHTML}
+      <div style="flex:1; display:flex; align-items:center; justify-content:center;">
+        <div style="width:100%;">${
+          otherTests || "<p style='text-align:center;'>No Additional Tests</p>"
+        }</div>
+      </div>
+      ${footerHTML}
+    </div>
+  `;
+
+    // Combine both
+    const container = document.createElement("div");
+    container.style.position = "absolute";
+    container.style.left = "-9999px";
+    container.innerHTML = page1 + page2;
+    document.body.appendChild(container);
+
+    try {
+      const pdf = new jsPDF("p", "mm", "a4");
+
+      const pages = container.children;
+      for (let i = 0; i < pages.length; i++) {
+        const canvas = await html2canvas(pages[i], { scale: 2, useCORS: true });
+        const imgData = canvas.toDataURL("image/jpeg");
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const imgHeight = (canvas.height * pageWidth) / canvas.width;
+        if (i > 0) pdf.addPage();
+        pdf.addImage(imgData, "JPEG", 0, 0, pageWidth, imgHeight);
       }
-    })
-    .join("");
 
-  // 🔹 Page 1 (CBC)
-  const page1 = `
-    <div style="width:700px; height:950px; border:1px solid #000; display:flex; flex-direction:column; justify-content:space-between; padding:30px; box-sizing:border-box;">
-      ${headerHTML}
-      <div style="flex:1; display:flex; align-items:center; justify-content:center;">
-        <div style="width:100%;">${cbcTest || "<p style='text-align:center;'>No CBC Test Available</p>"}</div>
-      </div>
-      ${footerHTML}
-    </div>
-  `;
-
-  // 🔹 Page 2 (Other Tests)
-  const page2 = `
-    <div style="width:700px; height:950px; border:1px solid #000; display:flex; flex-direction:column; justify-content:space-between; padding:30px; box-sizing:border-box;">
-      ${headerHTML}
-      <div style="flex:1; display:flex; align-items:center; justify-content:center;">
-        <div style="width:100%;">${otherTests || "<p style='text-align:center;'>No Additional Tests</p>"}</div>
-      </div>
-      ${footerHTML}
-    </div>
-  `;
-
-  // Combine both
-  const container = document.createElement("div");
-  container.style.position = "absolute";
-  container.style.left = "-9999px";
-  container.innerHTML = page1 + page2;
-  document.body.appendChild(container);
-
-  try {
-    const pdf = new jsPDF("p", "mm", "a4");
-
-    const pages = container.children;
-    for (let i = 0; i < pages.length; i++) {
-      const canvas = await html2canvas(pages[i], { scale: 2, useCORS: true });
-      const imgData = canvas.toDataURL("image/jpeg");
-      const pageWidth = pdf.internal.pageSize.getWidth();
-      const imgHeight = (canvas.height * pageWidth) / canvas.width;
-      if (i > 0) pdf.addPage();
-      pdf.addImage(imgData, "JPEG", 0, 0, pageWidth, imgHeight);
-    }
-
-    // pdf.save(`Lab_Report_${appointment.mrn}.pdf`);
+      // pdf.save(`Lab_Report_${appointment.mrn}.pdf`);
       // Save blob
       const pdfBlob = new Blob([pdf.output("arraybuffer")], {
         type: "application/pdf",
       });
-      
+
       // Upload to server
       const formData = new FormData();
       formData.append("mrn", appointment.mrn);
@@ -261,7 +279,7 @@ const handleGenerateLabReport = async () => {
         body: formData,
       });
 
-    const data = await res.json();
+      const data = await res.json();
       if (data.success) {
         alert("Lab Report saved on server successfully!");
         const url = URL.createObjectURL(pdfBlob);
@@ -269,14 +287,31 @@ const handleGenerateLabReport = async () => {
       } else {
         alert(data.message || "Failed to save lab report.");
       }
+    } catch (err) {
+      console.error("Error generating/uploading lab report:", err);
+      alert("Failed to generate lab report");
+    } finally {
+      document.body.removeChild(container);
+    }
+  };
 
-  } catch (err) {
-    console.error("Error generating/uploading lab report:", err);
-    alert("Failed to generate lab report");
-  } finally {
-    document.body.removeChild(container);
-  }
-};
+  const handleViewLab = async (mrn) => {
+    try {
+      if (!mrn) {
+        alert("MRN is missing");
+        return;
+      }
+
+      // Open in new tab directly
+      window.open(
+        `${API_URL}appointments/openlabReport/${encodeURIComponent(mrn)}`,
+        "_blank"
+      );
+    } catch (error) {
+      console.error("Error opening lab report:", error);
+      alert("Failed to open lab report");
+    }
+  };
 
   return (
     <div className="p-6 max-w-3xl mx-auto">
@@ -536,7 +571,7 @@ const handleGenerateLabReport = async () => {
 
           <Separator />
 
-          <div className="flex justify-between items-center text-sm">
+          <div className="flex justify-between items-center text-sm flex-wrap gap-3">
             <p>
               <span className="font-semibold">Lab Collection:</span>{" "}
               <Badge
@@ -549,7 +584,23 @@ const handleGenerateLabReport = async () => {
                 {appointment.labCollection}
               </Badge>
             </p>
-            <Button onClick={handleGenerateLabReport}>Generate Lab Report</Button>
+
+            <div className="flex items-center gap-3">
+              {/* ✅ Always show this */}
+              <Button onClick={handleGenerateLabReport}>
+                Generate PDF Report
+              </Button>
+
+              {/* ✅ Only show this when labCollection is NOT Pending */}
+              {appointment.labCollection !== "Pending" && (
+                <Button
+                  variant="outline"
+                  onClick={() => handleViewLab(appointment.mrn)}
+                >
+                  View Lab Report
+                </Button>
+              )}
+            </div>
 
             <div className="flex items-center gap-2">
               <Label className="font-semibold">Report Date:</Label>
