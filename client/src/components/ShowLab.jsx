@@ -97,8 +97,8 @@ const handleGenerateLabReport = async () => {
   // Helper: Header, Patient Info, Footer HTML (kept identical for both pages)
   const headerHTML = `
     <div style="text-align:center; border-bottom:2px solid #000; padding-bottom:6px;">
-      <h1 style="margin:0; font-size:18pt; font-weight:bold; color:#1a1a1a;">Family  Care Hospital</h1>
-      <h2 style="margin:5px 0 0 0; font-size:13pt; font-weight:bold; color:#b30000; text-transform:uppercase;">Clinical  Laboratory</h2>
+      <h1 style="margin:0; font-size:18pt; font-weight:bold; color:#1a1a1a; white-space:pre;">Family Care Hospital</h1>
+      <h2 style="margin:5px 0 0 0; font-size:13pt; font-weight:bold; color:#b30000; text-transform:uppercase; white-space:pre;">Clinical  Laboratory</h2>
       <p style="margin:5px 0 0 0; font-style:italic; font-size:9pt;">"Determined to serve humanity"</p>
     </div>
     <div style="margin-top:8px; display:grid; grid-template-columns:repeat(2,1fr); font-size:9pt;">
@@ -122,7 +122,7 @@ const handleGenerateLabReport = async () => {
       </div>
       <hr style="margin:10px auto; width:75%; border:0; border-top:1px solid #888;" />
       <p style="margin:3px 0;">📞 <strong>0333-6438402</strong></p>
-      <p style="margin:2px 0;">🏥 Qutub  Canal Link Road, Rajanpur</p>
+      <p style="margin:2px 0; white-space:pre;">🏥 Qutub  Canal Link Road, Rajanpur</p>
     </div>
   `;
 
