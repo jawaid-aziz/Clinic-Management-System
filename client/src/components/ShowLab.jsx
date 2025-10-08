@@ -304,7 +304,7 @@ export const ShowLab = () => {
 
       // Open in new tab directly
       window.open(
-        `${API_URL}appointments/openlabReport/${encodeURIComponent(mrn)}`,
+        `${API_URL}appointments/openLabReport/${encodeURIComponent(mrn)}`,
         "_blank"
       );
     } catch (error) {
