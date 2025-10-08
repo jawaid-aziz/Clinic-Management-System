@@ -245,18 +245,38 @@ const handleGenerateLabReport = async () => {
       pdf.addImage(imgData, "JPEG", 0, 0, pageWidth, imgHeight);
     }
 
-    pdf.save(`Lab_Report_${appointment.mrn}.pdf`);
+    // pdf.save(`Lab_Report_${appointment.mrn}.pdf`);
+      // Save blob
+      const pdfBlob = new Blob([pdf.output("arraybuffer")], {
+        type: "application/pdf",
+      });
+      
+      // Upload to server
+      const formData = new FormData();
+      formData.append("mrn", appointment.mrn);
+      formData.append("file", pdfBlob, `${appointment.mrn}.pdf`);
+
+      const res = await fetch(`${API_URL}appointments/labReport`, {
+        method: "POST",
+        body: formData,
+      });
+
+    const data = await res.json();
+      if (data.success) {
+        alert("Lab Report saved on server successfully!");
+        const url = URL.createObjectURL(pdfBlob);
+        window.open(url, "_blank");
+      } else {
+        alert(data.message || "Failed to save lab report.");
+      }
+
   } catch (err) {
-    console.error("Error generating lab report:", err);
+    console.error("Error generating/uploading lab report:", err);
     alert("Failed to generate lab report");
   } finally {
     document.body.removeChild(container);
   }
 };
-
-
-
-
 
   return (
     <div className="p-6 max-w-3xl mx-auto">
@@ -529,7 +549,7 @@ const handleGenerateLabReport = async () => {
                 {appointment.labCollection}
               </Badge>
             </p>
-            <Button onClick={handleGenerateLabReport}>Generate PDF Report</Button>
+            <Button onClick={handleGenerateLabReport}>Generate Lab Report</Button>
 
             <div className="flex items-center gap-2">
               <Label className="font-semibold">Report Date:</Label>

@@ -10,7 +10,9 @@ const { addAppointment,
     searchAppointment,
     getPrescription,
     deleteAppointment,
-    saveLabTests
+    saveLabTests,
+    uploadLabReport,
+    getLabReport,
 } = require('../controllers/appointments');
 
 router.post("/add", addAppointment);
@@ -22,7 +24,9 @@ router.get("/:id", getAppointmentData);
 router.post("/:id/saveLabTests", saveLabTests);
 router.put("/:id/time", updateAppointmentTime);
 router.post("/prescription", upload.single("file"), uploadPrescription);
+router.post("/labReport", upload.single("file"), uploadLabReport);
 router.get("/search", searchAppointment);
 router.get("/openPrescription/:mrn", getPrescription);
+router.get("/openLabReport/:mrn", getLabReport);
 
 module.exports = router;

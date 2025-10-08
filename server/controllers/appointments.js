@@ -4,6 +4,7 @@ const fs = require("fs");
 const multer = require("multer");
 const Prescription = require("../models/Prescription");
 const cloudinary = require("../config/cloudinary");
+const Lab = require("../models/Lab");
 
 // Search by MRN, Name, or Phone
 async function searchAppointment(req, res) {
@@ -471,6 +472,124 @@ async function deleteAppointment(req, res) {
   }
 }
 
+// Controller to handle lab report upload
+async function uploadLabReport(req, res) {
+  try {
+    const { mrn } = req.body;
+
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: "No file uploaded",
+      });
+    }
+
+    // 🔼 Upload buffer to Cloudinary
+    const uploadResult = await new Promise((resolve, reject) => {
+      cloudinary.uploader
+        .upload_stream(
+          {
+            resource_type: "raw", // important for PDFs!
+            folder: "lab-reports", // Cloudinary folder
+            public_id: mrn, // make MRN the filename
+            overwrite: true, // replace if exists
+            format: "pdf", // ensure PDF format
+          },
+          (error, result) => {
+            if (error) reject(error);
+            else resolve(result);
+          }
+        )
+        .end(req.file.buffer); // send file buffer
+    });
+
+    // 🧠 Upsert (create or update) lab report in DB
+    const labReport = await Lab.findOneAndUpdate(
+      { mrn },
+      {
+        cloudinaryId: uploadResult.public_id,
+        url: uploadResult.secure_url,
+      },
+      { upsert: true, new: true } // create if not found, return updated doc
+    );
+
+    // ⬇️ Update appointment with the template used
+    await Appointment.findOneAndUpdate(
+      { mrn },
+      { labCollection: "Completed" }, // also mark appointment as Completed
+      { new: true }
+    );
+
+    res.status(200).json({
+      success: true,
+      message: "Lab report saved successfully",
+      data: labReport,
+    });
+  } catch (error) {
+    console.error("Error saving lab report:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to save lab report",
+      error: error.message,
+    });
+  }
+}
+
+// Controller to open lab report file in new tab
+async function getLabReport(req, res) {
+  try {
+    const { mrn } = req.params; // assuming route is /lab-report/:mrn
+
+    if (!mrn) {
+      return res.status(400).json({
+        success: false,
+        message: "MRN is required",
+      });
+    }
+
+    // Check DB
+    const labReport = await Lab.findOne({ mrn });
+    if (!labReport) {
+      return res.status(404).json({
+        success: false,
+        message: "Lab report not found in database",
+      });
+    }
+
+    //     // Build file path
+    //     const filePath = path.join(__dirname, "../Prescriptions", prescription.fileName);
+
+    //     // Check if file exists on disk
+    //     if (!fs.existsSync(filePath)) {
+    //       return res.status(404).json({
+    //         success: false,
+    //         message: "Prescription file not found on server",
+    //       });
+    //     }
+
+    // ✅ Generate a signed inline URL
+    const signedUrl = cloudinary.url(labReport.url, {
+      // resource_type: "raw",
+      // type: "upload",
+      // folder: "lab-reports",
+      // format: "pdf",
+      sign_url: true,    // important for signed access
+    });
+
+    // // ✅ Explicitly set inline viewing
+    // res.type("pdf");
+    // res.setHeader("Content-Disposition", `inline; filename="${prescription.mrn}"`);
+    return res.redirect(signedUrl);
+
+  } catch (error) {
+    console.error("Error fetching lab report:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch lab report",
+      error: error.message,
+    });
+  }
+}
 
 module.exports = {
   addAppointment,
@@ -483,5 +602,7 @@ module.exports = {
   searchAppointment,
   getPrescription,
   deleteAppointment,
-  saveLabTests
+  saveLabTests,
+  uploadLabReport,
+  getLabReport,
 };
