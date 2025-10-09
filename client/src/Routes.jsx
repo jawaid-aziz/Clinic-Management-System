@@ -2,12 +2,12 @@ import { Login } from "./Pages/Login";
 import { Home } from "./Pages/Home";
 import { Layout } from "./Pages/Layout";
 import { ProtectedRoute } from "./lib/ProtectedRoute";
-import { AddAppointment } from "./components/AddAppointment";
-import { PendingAppointments } from "./components/PendingAppointments";
-import { HistoryAppointments } from "./components/HistoryAppointments";
-import { Appointment } from "./components/Appointment";
-import { Settings } from "./components/Settings";
-import { ShowLab } from "./components/ShowLab";
+import { AddAppointment } from "./Components/AddAppointment";
+import { PendingAppointments } from "./Components/PendingAppointments";
+import { HistoryAppointments } from "./Components/HistoryAppointments";
+import { Appointment } from "./Components/Appointment";
+import { Settings } from "./Components/Settings";
+import { ShowLab } from "./Components/ShowLab";
 
 export const AllRoutes = [
   {
