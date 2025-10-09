@@ -365,6 +365,12 @@ export const HistoryAppointments = () => {
             placeholder="Search by MRN, Name, or Phone"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                searchAppointment();
+              }
+            }}
           />
           <Button onClick={searchAppointment} disabled={loading}>
             {loading ? "Searching..." : "Search"}

@@ -455,11 +455,27 @@ async function deleteAppointment(req, res) {
       }
     }
 
+    // 2. Find prescription (if any)
+    const labReport = await Lab.findOneAndDelete({ mrn });
+
+    // 3. If prescription exists, also delete from Cloudinary
+    if (labReport) {
+      try {
+        await cloudinary.uploader.destroy(labReport.cloudinaryId, {
+          resource_type: "raw", // important for PDFs
+        });
+        console.log(`Deleted lab report from Cloudinary: ${labReport.cloudinaryId}`);
+      } catch (cloudErr) {
+        console.error("Failed to delete from Cloudinary:", cloudErr);
+      }
+    }
+
     res.status(200).json({
       success: true,
       message: "Appointment and related prescription deleted successfully",
       deletedAppointment: appointment,
       deletedPrescription: prescription || null,
+      deletedLabReport: labReport || null,
     });
 
   } catch (error) {

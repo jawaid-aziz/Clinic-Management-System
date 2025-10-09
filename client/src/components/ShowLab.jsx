@@ -88,24 +88,21 @@ export const ShowLab = () => {
     );
   };
 
-  const handleGenerateLabReport = async () => {
-    if (!appointment) {
-      alert("Appointment data not loaded yet!");
-      return;
-    }
+const handleGenerateLabReport = async () => {
+  if (!appointment) {
+    alert("Appointment data not loaded yet!");
+    return;
+  }
 
-    // Helper: Header, Patient Info, Footer HTML (kept identical for both pages)
-    const headerHTML = `
+  const headerHTML = `
     <div style="text-align:center; border-bottom:2px solid #000; padding-bottom:6px;">
-      <h1 style="margin:0; font-size:18pt; font-weight:bold; color:#1a1a1a; white-space:pre;">Family Care Hospital</h1>
+      <h1 style="margin:0; font-size:18pt; font-weight:bold; color:#1a1a1a;">Family Care Hospital</h1>
       <h2 style="margin:5px 0 0 0; font-size:13pt; font-weight:bold; color:#b30000; text-transform:uppercase; white-space:pre;">Clinical  Laboratory</h2>
       <p style="margin:5px 0 0 0; font-style:italic; font-size:9pt;">"Determined to serve humanity"</p>
     </div>
     <div style="margin-top:8px; display:grid; grid-template-columns:repeat(2,1fr); font-size:9pt;">
       <p><strong>MRN:</strong> ${appointment.mrn}</p>
-      <p><strong>Date:</strong> ${
-        reportDate ? format(reportDate, "PPP") : new Date().toLocaleDateString()
-      }</p>
+      <p><strong>Date:</strong> ${reportDate ? format(reportDate, "PPP") : new Date().toLocaleDateString()}</p>
       <p><strong>Name:</strong> ${appointment.name}</p>
       <p><strong>Doctor:</strong> ${appointment.doctor || "-"}</p>
       <p><strong>Age:</strong> ${appointment.age || "-"}</p>
@@ -115,185 +112,177 @@ export const ShowLab = () => {
     </div>
   `;
 
-    const footerHTML = `
+  const footerHTML = `
     <div style="margin-top:auto; border-top:2px solid #000; padding-top:10px; text-align:center; font-size:9pt;">
       <div style="display:flex; justify-content:space-around; flex-wrap:wrap; gap:10px;">
-        <div><strong>Dr. Ejaz  Mazari</strong><br/>MBBS, FCPS<br/><em>Child Specialist</em></div>
-        <div><strong>Dr. Saima  Ejaz</strong><br/>MBBS</div>
-        <div><strong>Sadaf  Raheem</strong><br/><em>Lab Technologist</em></div>
+        <div><strong>Dr. Ejaz Mazari</strong><br/>MBBS, FCPS<br/><em>Child Specialist</em></div>
+        <div><strong>Dr. Saima Ejaz</strong><br/>MBBS</div>
+        <div><strong>Sadaf Raheem</strong><br/><em>Lab Technologist</em></div>
       </div>
       <hr style="margin:10px auto; width:75%; border:0; border-top:1px solid #888;" />
       <p style="margin:3px 0;">📞 <strong>0333-6438402</strong></p>
-      <p style="margin:2px 0; white-space:pre;">🏥 Qutub  Canal Link Road, Rajanpur</p>
+      <p style="margin:2px 0;">🏥 Qutub Canal Link Road, Rajanpur</p>
     </div>
   `;
 
-    // Build test sections
-    const cbcTest = appointment.labs.includes(
-      "CBC (Complete Blood Count) Basic Hematology"
-    )
-      ? `
-      <div style="margin-bottom:20px;">
-        <h3 style="margin:0; font-size:12pt; font-weight:bold; text-decoration:underline;">CBC  (Complete  Blood  Count )</h3>
-        <table style="width:100%; border-collapse:collapse; margin-top:8px; font-size:9pt;">
-          <thead>
-            <tr style="background-color:#f5f5f5;">
-              <th style="border:1px solid #000; padding:5px;">Test</th>
-              <th style="border:1px solid #000; padding:5px;">Result</th>
-              <th style="border:1px solid #000; padding:5px;">Normal Range</th>
-              <th style="border:1px solid #000; padding:5px;">Unit</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${[
-              { name: "HB", range: "11.5 - 14.5", unit: "g/dl" },
-              { name: "Total RBC", range: "4 - 6", unit: "x10^12/l" },
-              { name: "HCT", range: "32 - 46", unit: "%" },
-              { name: "MCV", range: "75 - 85", unit: "fl" },
-              { name: "MCH", range: "26 - 32", unit: "pg" },
-              { name: "MCHC", range: "30 - 35", unit: "g/dl" },
-              { name: "Platelets", range: "140 - 450", unit: "x10^3/µL" },
-              { name: "WBC", range: "6 - 13", unit: "10^3/µl" },
-              { name: "Neutrophils", range: "20 - 75", unit: "%" },
-              { name: "Lymphocytes", range: "30 - 75", unit: "%" },
-              { name: "Eosinophils", range: "1 - 5", unit: "%" },
-              { name: "Monocytes", range: "2 - 6", unit: "%" },
-            ]
-              .map(
-                (row) => `
-              <tr>
-                <td style="border:1px solid #000; padding:4px;">${row.name}</td>
-                <td style="border:1px solid #000; padding:4px;">${
-                  labResults[row.name] || "-"
-                }</td>
-                <td style="border:1px solid #000; padding:4px;">${
-                  row.range
-                }</td>
-                <td style="border:1px solid #000; padding:4px;">${row.unit}</td>
-              </tr>`
-              )
-              .join("")}
-          </tbody>
-        </table>
-      </div>`
-      : "";
+  // ✅ Separate tests
+  const cbcAvailable = appointment.labs.includes("CBC (Complete Blood Count) Basic Hematology");
+  const inHouse = appointment.labs.filter(t => inHouseTests.includes(t));
+  const outsource = appointment.labs.filter(t => outSourceTests.includes(t));
 
-    const otherTests = appointment.labs
-      .filter((t) => t !== "CBC (Complete Blood Count) Basic Hematology")
-      .map((test) => {
-        if (test === "Blood Group") {
-          return `
-        <div style="margin-bottom:18px;">
-          <h3 style="margin:0; font-size:11pt; font-weight:bold; text-decoration:underline;">Blood  Group</h3>
-          <table style="width:100%; border-collapse:collapse; margin-top:6px;">
+  // ✅ CBC table (only if available)
+  const cbcHTML = cbcAvailable ? `
+    <div style="margin-bottom:20px;">
+      <h3 style="margin:0; font-size:12pt; font-weight:bold; text-decoration:underline; white-space:pre;">CBC (Complete Blood Count )</h3>
+      <table style="width:100%; border-collapse:collapse; margin-top:8px; font-size:9pt;">
+        <thead>
+          <tr style="background-color:#f5f5f5;">
+            <th style="border:1px solid #000; padding:5px;">Test</th>
+            <th style="border:1px solid #000; padding:5px;">Result</th>
+            <th style="border:1px solid #000; padding:5px;">Normal Range</th>
+            <th style="border:1px solid #000; padding:5px;">Unit</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${[
+            { name: "HB", range: "11.5 - 14.5", unit: "g/dl" },
+            { name: "Total RBC", range: "4 - 6", unit: "x10^12/l" },
+            { name: "HCT", range: "32 - 46", unit: "%" },
+            { name: "MCV", range: "75 - 85", unit: "fl" },
+            { name: "MCH", range: "26 - 32", unit: "pg" },
+            { name: "MCHC", range: "30 - 35", unit: "g/dl" },
+            { name: "Platelets", range: "140 - 450", unit: "x10^3/µL" },
+            { name: "WBC", range: "6 - 13", unit: "10^3/µl" },
+            { name: "Neutrophils", range: "20 - 75", unit: "%" },
+            { name: "Lymphocytes", range: "30 - 75", unit: "%" },
+            { name: "Eosinophils", range: "1 - 5", unit: "%" },
+            { name: "Monocytes", range: "2 - 6", unit: "%" },
+          ].map(row => `
             <tr>
-              <th style="border:1px solid #000; padding:5px;">ABO  Group</th>
-              <th style="border:1px solid #000; padding:5px;">Rhesus  ( Rh )</th>
+              <td style="border:1px solid #000; padding:4px;">${row.name}</td>
+              <td style="border:1px solid #000; padding:4px;">${labResults[row.name] || "-"}</td>
+              <td style="border:1px solid #000; padding:4px;">${row.range}</td>
+              <td style="border:1px solid #000; padding:4px;">${row.unit}</td>
             </tr>
-            <tr>
-              <td style="border:1px solid #000; padding:5px;">${
-                labResults["ABO Group"] || "-"
-              }</td>
-              <td style="border:1px solid #000; padding:5px;">${
-                labResults["Rhesus"] || "-"
-              }</td>
-            </tr>
-          </table>
-        </div>`;
-        } else {
-          return `
+          `).join("")}
+        </tbody>
+      </table>
+    </div>
+  ` : "";
+
+  // ✅ Other in-house tests (excluding CBC)
+  const otherInHouse = inHouse
+    .filter(t => t !== "CBC (Complete Blood Count) Basic Hematology")
+    .map(test => {
+      if (test === "Blood Group") {
+        return `
+          <div style="margin-bottom:15px;">
+            <h3 style="margin:0; font-size:11pt; font-weight:bold; text-decoration:underline;">Blood Group</h3>
+            <table style="width:100%; border-collapse:collapse; margin-top:6px;">
+              <tr>
+                <th style="border:1px solid #000; padding:5px;">ABO Group</th>
+                <th style="border:1px solid #000; padding:5px;">Rhesus (Rh)</th>
+              </tr>
+              <tr>
+                <td style="border:1px solid #000; padding:5px;">${labResults["ABO Group"] || "-"}</td>
+                <td style="border:1px solid #000; padding:5px;">${labResults["Rhesus"] || "-"}</td>
+              </tr>
+            </table>
+          </div>
+        `;
+      }
+      return `
         <div style="margin-bottom:15px;">
           <h3 style="margin:0; font-size:11pt; font-weight:bold; text-decoration:underline;">${test}</h3>
-          <table style="width:100%; border-collapse:collapse; margin-top:6px;">
-            <tr>
-              <th style="border:1px solid #000; padding:5px;">Result</th>
-              <td style="border:1px solid #000; padding:5px;">${
-                labResults[test] || "-"
-              }</td>
-            </tr>
-          </table>
-        </div>`;
-        }
-      })
-      .join("");
+          <p style="margin:4px 0;"><strong>Result:</strong> ${labResults[test] || "-"}</p>
+        </div>
+      `;
+    }).join("");
 
-    // 🔹 Page 1 (CBC)
-    const page1 = `
-    <div style="width:700px; height:950px; border:1px solid #000; display:flex; flex-direction:column; justify-content:space-between; padding:30px; box-sizing:border-box;">
+  // ✅ Outsource tests (only names)
+  const outsourceHTML = outsource.length
+    ? `
+      <div style="margin-top:20px;">
+        <h3 style="font-size:11pt; text-decoration:underline;">Outsourced Tests:</h3>
+        <ul style="margin-top:6px; padding-left:20px; font-size:9pt;">
+          ${outsource.map(t => `<li>${t}</li>`).join("")}
+        </ul>
+      </div>
+    `
+    : "";
+
+  // ✅ Determine layout
+  const pageContent = cbcAvailable
+    ? {
+        page1: `${cbcHTML}`,
+        page2: `${otherInHouse}${outsourceHTML}`,
+      }
+    : {
+        page1: `${otherInHouse}${outsourceHTML}`,
+      };
+
+  // ✅ Construct container
+  const container = document.createElement("div");
+  container.style.position = "absolute";
+  container.style.left = "-9999px";
+container.innerHTML = `
+  <div style="width:700px; height:950px; display:flex; flex-direction:column; justify-content:space-between; padding:30px; box-sizing:border-box;">
+    ${headerHTML}
+    <div style="flex:1; display:flex; flex-direction:column; align-items:flex-start; justify-content:flex-start;">
+      <div style="width:100%;">${pageContent.page1}</div>
+    </div>
+    ${footerHTML}
+  </div>
+  ${pageContent.page2 ? `
+    <div style="page-break-before:always; width:700px; height:950px; display:flex; flex-direction:column; justify-content:space-between; padding:30px; box-sizing:border-box;">
       ${headerHTML}
-      <div style="flex:1; display:flex; align-items:center; justify-content:center;">
-        <div style="width:100%;">${
-          cbcTest || "<p style='text-align:center;'>No CBC Test Available</p>"
-        }</div>
+      <div style="flex:1; display:flex; flex-direction:column; align-items:flex-start; justify-content:flex-start;">
+        <div style="width:100%;">${pageContent.page2}</div>
       </div>
       ${footerHTML}
-    </div>
-  `;
+    </div>` : ""}
+`;
 
-    // 🔹 Page 2 (Other Tests)
-    const page2 = `
-    <div style="width:700px; height:950px; border:1px solid #000; display:flex; flex-direction:column; justify-content:space-between; padding:30px; box-sizing:border-box;">
-      ${headerHTML}
-      <div style="flex:1; display:flex; align-items:center; justify-content:center;">
-        <div style="width:100%;">${
-          otherTests || "<p style='text-align:center;'>No Additional Tests</p>"
-        }</div>
-      </div>
-      ${footerHTML}
-    </div>
-  `;
+  document.body.appendChild(container);
 
-    // Combine both
-    const container = document.createElement("div");
-    container.style.position = "absolute";
-    container.style.left = "-9999px";
-    container.innerHTML = page1 + page2;
-    document.body.appendChild(container);
-
-    try {
-      const pdf = new jsPDF("p", "mm", "a4");
-
-      const pages = container.children;
-      for (let i = 0; i < pages.length; i++) {
-        const canvas = await html2canvas(pages[i], { scale: 2, useCORS: true });
-        const imgData = canvas.toDataURL("image/jpeg");
-        const pageWidth = pdf.internal.pageSize.getWidth();
-        const imgHeight = (canvas.height * pageWidth) / canvas.width;
-        if (i > 0) pdf.addPage();
-        pdf.addImage(imgData, "JPEG", 0, 0, pageWidth, imgHeight);
-      }
-
-      // pdf.save(`Lab_Report_${appointment.mrn}.pdf`);
-      // Save blob
-      const pdfBlob = new Blob([pdf.output("arraybuffer")], {
-        type: "application/pdf",
-      });
-
-      // Upload to server
-      const formData = new FormData();
-      formData.append("mrn", appointment.mrn);
-      formData.append("file", pdfBlob, `${appointment.mrn}.pdf`);
-
-      const res = await fetch(`${API_URL}appointments/labReport`, {
-        method: "POST",
-        body: formData,
-      });
-
-      const data = await res.json();
-      if (data.success) {
-        alert("Lab Report saved on server successfully!");
-        const url = URL.createObjectURL(pdfBlob);
-        window.open(url, "_blank");
-      } else {
-        alert(data.message || "Failed to save lab report.");
-      }
-    } catch (err) {
-      console.error("Error generating/uploading lab report:", err);
-      alert("Failed to generate lab report");
-    } finally {
-      document.body.removeChild(container);
+  try {
+    const pdf = new jsPDF("p", "mm", "a4");
+    const pages = container.children;
+    for (let i = 0; i < pages.length; i++) {
+      const canvas = await html2canvas(pages[i], { scale: 2, useCORS: true });
+      const imgData = canvas.toDataURL("image/jpeg");
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const imgHeight = (canvas.height * pageWidth) / canvas.width;
+      if (i > 0) pdf.addPage();
+      pdf.addImage(imgData, "JPEG", 0, 0, pageWidth, imgHeight);
     }
-  };
+
+    const pdfBlob = new Blob([pdf.output("arraybuffer")], { type: "application/pdf" });
+    const formData = new FormData();
+    formData.append("mrn", appointment.mrn);
+    formData.append("file", pdfBlob, `${appointment.mrn}.pdf`);
+
+    const res = await fetch(`${API_URL}appointments/labReport`, {
+      method: "POST",
+      body: formData,
+    });
+
+    const data = await res.json();
+    if (data.success) {
+      alert("Lab Report saved on server successfully!");
+      const url = URL.createObjectURL(pdfBlob);
+      window.open(url, "_blank");
+    } else {
+      alert(data.message || "Failed to save lab report.");
+    }
+  } catch (err) {
+    console.error("Error generating/uploading lab report:", err);
+    alert("Failed to generate lab report");
+  } finally {
+    document.body.removeChild(container);
+  }
+};
+
 
   const handleViewLab = async (mrn) => {
     try {
