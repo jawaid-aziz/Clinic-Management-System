@@ -23,7 +23,5 @@ connectToMongoDB(process.env.MONGO_URL)
 app.use("/api/appointments", appointmentsRouter);
 
 // Server start
-const PORT = 8000;
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
+const PORT = process.env.PORT || 8000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
