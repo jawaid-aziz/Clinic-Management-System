@@ -23,6 +23,7 @@ import html2canvas from "html2canvas-pro";
 import jsPDF from "jspdf";
 import { renderAsync } from "docx-preview";
 import { useNavigate } from "react-router-dom";
+import { Loader2 } from "lucide-react";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -117,6 +118,7 @@ export const HistoryAppointments = () => {
   };
 
   const handleSaveTimes = async (id) => {
+    setLoading(true);
     try {
       const res = await fetch(`${API_URL}appointments/${id}/time`, {
         method: "PUT",
@@ -126,11 +128,13 @@ export const HistoryAppointments = () => {
 
       const data = await res.json();
       if (data.success) {
+        setLoading(false);
         alert("Times updated successfully!");
       } else {
         alert(data.message || "Failed to update times");
       }
     } catch (err) {
+      setLoading(false);
       console.error(err);
       alert("Something went wrong while saving times.");
     }
@@ -157,6 +161,7 @@ export const HistoryAppointments = () => {
   };
 
   const handleGeneratePrescription = async () => {
+    setLoading(true);
     if (!docxContent || !selectedAppointment) {
       alert("Please choose a template and make sure appointment is loaded.");
       return;
@@ -276,13 +281,16 @@ export const HistoryAppointments = () => {
 
       const data = await res.json();
       if (data.success) {
+        setLoading(false);
         alert("Prescription saved on server successfully!");
         const url = URL.createObjectURL(pdfBlob);
         window.open(url, "_blank");
       } else {
+        setLoading(false);
         alert(data.message || "Failed to save prescription.");
       }
     } catch (err) {
+      setLoading(false);
       console.error("Error generating/uploading prescription:", err);
       alert("Error generating prescription.");
     } finally {
@@ -292,6 +300,7 @@ export const HistoryAppointments = () => {
   };
 
   const handleViewPrescription = async (mrn) => {
+    setLoading(true);
     try {
       if (!mrn) {
         alert("MRN is missing");
@@ -303,13 +312,16 @@ export const HistoryAppointments = () => {
         `${API_URL}appointments/openPrescription/${encodeURIComponent(mrn)}`,
         "_blank"
       );
+      setLoading(false);
     } catch (error) {
+      setLoading(false);
       console.error("Error opening prescription:", error);
       alert("Failed to open prescription");
     }
   };
 
   const handleDeletePrescription = async (mrn) => {
+    setLoading(true);
     try {
       if (!mrn) {
         alert("MRN is missing");
@@ -326,12 +338,14 @@ export const HistoryAppointments = () => {
 
       const data = await res.json();
       if (data.success) {
+        setLoading(false);
         alert("Record deleted successfully!");
         navigate("/history-appointments");
       } else {
         alert(data.message || "Failed to delete record.");
       }
     } catch (error) {
+      setLoading(false);
       console.error("Error deleting record:", error);
       alert("Failed to delete record");
     }
@@ -528,11 +542,21 @@ export const HistoryAppointments = () => {
               </div>
               <div>
                 <Label>Time In:</Label>
-                <p>{formatToAMPM(selectedAppointment.timeIn) || "N/A"}</p>
+                <p>
+                  {selectedAppointment.timeIn &&
+                  selectedAppointment.timeIn.trim() !== ""
+                    ? formatToAMPM(selectedAppointment.timeIn)
+                    : "—"}
+                </p>
               </div>
               <div>
                 <Label>Time Out:</Label>
-                <p>{formatToAMPM(selectedAppointment.timeOut) || "N/A"}</p>
+                <p>
+                  {selectedAppointment.timeOut &&
+                  selectedAppointment.timeOut.trim() !== ""
+                    ? formatToAMPM(selectedAppointment.timeIn)
+                    : "—"}
+                </p>
               </div>
             </div>
           )}
@@ -630,6 +654,17 @@ export const HistoryAppointments = () => {
           <AlertTitle>No Appointments</AlertTitle>
           <AlertDescription>No appointments found for {date}.</AlertDescription>
         </Alert>
+      )}
+
+      {loading && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-neutral-900 rounded-lg p-6 shadow-lg flex flex-col items-center gap-3">
+            <Loader2 className="w-6 h-6 animate-spin text-primary" />
+            <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              Please wait...
+            </p>
+          </div>
+        </div>
       )}
     </div>
   );

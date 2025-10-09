@@ -18,9 +18,7 @@ export const PendingAppointments = () => {
   useEffect(() => {
     const fetchAppointments = async () => {
       try {
-        const res = await fetch(
-          `${API_URL}appointments/pending?role=${role}`
-        );
+        const res = await fetch(`${API_URL}appointments/pending?role=${role}`);
         const data = await res.json();
         setAppointments(data.data || []);
         console.log(data);
@@ -38,11 +36,11 @@ export const PendingAppointments = () => {
   };
 
   const formatToAMPM = (timeStr) => {
-  let [hour, minute] = timeStr.split(":").map(Number);
-  const ampm = hour >= 12 ? "PM" : "AM";
-  hour = hour % 12 || 12; // convert 0 → 12 and 13–23 → 1–11
-  return `${hour}:${minute.toString().padStart(2, "0")} ${ampm}`;
-};
+    let [hour, minute] = timeStr.split(":").map(Number);
+    const ampm = hour >= 12 ? "PM" : "AM";
+    hour = hour % 12 || 12; // convert 0 → 12 and 13–23 → 1–11
+    return `${hour}:${minute.toString().padStart(2, "0")} ${ampm}`;
+  };
 
   if (loading) {
     return (
@@ -77,8 +75,12 @@ export const PendingAppointments = () => {
                   {new Date(appt.date).toLocaleDateString()}
                 </p>
                 <p>
-                  <strong>Time In:</strong> {formatToAMPM(appt.timeIn)}
+                  <strong>Time In:</strong>{" "}
+                  {appt.timeIn && appt.timeIn.trim() !== ""
+                    ? formatToAMPM(appt.timeIn)
+                    : "—"}
                 </p>
+
                 <p>
                   <strong>Phone:</strong> {appt.phone}
                 </p>

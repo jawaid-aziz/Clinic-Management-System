@@ -23,6 +23,8 @@ import {
   PopoverTrigger,
   PopoverContent,
 } from "@/components/ui/popover";
+import { set } from "date-fns";
+
 const API_URL = import.meta.env.VITE_API_URL;
 
 export const Appointment = () => {
@@ -96,6 +98,7 @@ export const Appointment = () => {
   }, [id]);
 
   const handleSaveTimes = async () => {
+    setLoading(true);
     try {
       const res = await fetch(`${API_URL}appointments/${id}/time`, {
         method: "PUT",
@@ -105,6 +108,7 @@ export const Appointment = () => {
 
       const data = await res.json();
       if (data.success) {
+        setLoading(false);
         // update local appointment state too
         setAppointment((prev) => ({
           ...prev,
@@ -113,15 +117,18 @@ export const Appointment = () => {
         }));
         alert("Times updated successfully!");
       } else {
+        setLoading(false);
         alert(data.message || "Failed to update times");
       }
     } catch (err) {
+      setLoading(false);
       console.error(err);
       alert("Something went wrong while saving times.");
     }
   };
   
   const saveLabTests = async () => {
+    setLoading(true);
     if (!labType || selectedTests.length === 0) {
       alert("Please select lab type and tests.");
       return;
@@ -136,11 +143,14 @@ export const Appointment = () => {
 
       const data = await res.json();
       if (data.success) {
+        setLoading(false);
         alert("Lab tests saved successfully!");
       } else {
+        setLoading(false);
         alert(data.message || "Failed to save lab tests");
       }
     } catch (err) {
+      setLoading(false);
       console.error(err);
       alert("Something went wrong while saving lab tests.");
     }
@@ -167,6 +177,7 @@ export const Appointment = () => {
   };
 
   const handleGeneratePrescription = async () => {
+    setLoading(true);
     if (!appointment) {
       alert("Make sure appointment is loaded.");
       return;
@@ -215,8 +226,8 @@ export const Appointment = () => {
       <hr style="margin: 12px 0;" />
 
       <div style="font-size:9pt; text-align:right;">
-        <p><strong>Time In:</strong> ${formatToAMPM(timeIn)}</p>
-        <p><strong>Time Out:</strong> ${formatToAMPM(timeOut)}</p>
+        <p><strong>Time In:</strong> ${timeIn && timeIn.trim() !== "" ? formatToAMPM(timeIn) : "—"}</p>
+        <p><strong>Time Out:</strong> ${timeOut && timeOut.trim() !== "" ? formatToAMPM(timeOut) : "—"}</p>
       </div>
 
     <!-- ✅ Content area with stamp above it -->
@@ -286,14 +297,17 @@ export const Appointment = () => {
 
       const data = await res.json();
       if (data.success) {
+        setLoading(false);
         alert("Prescription saved on server successfully!");
         const url = URL.createObjectURL(pdfBlob);
         window.open(url, "_blank");
         navigate("/pending-appointments");
       } else {
+        setLoading(false);
         alert(data.message || "Failed to save prescription.");
       }
     } catch (err) {
+      setLoading(false);
       console.error("Error generating/uploading prescription:", err);
       alert("Error generating prescription.");
     } finally {
@@ -509,6 +523,18 @@ export const Appointment = () => {
           </div>
         </CardContent>
       </Card>
+
+      {loading && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-neutral-900 rounded-lg p-6 shadow-lg flex flex-col items-center gap-3">
+            <Loader2 className="w-6 h-6 animate-spin text-primary" />
+            <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              Please wait...
+            </p>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };

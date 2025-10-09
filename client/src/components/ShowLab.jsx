@@ -14,9 +14,10 @@ import {
 } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { CalendarIcon } from "lucide-react";
-import { format } from "date-fns";
+import { format, set } from "date-fns";
 import html2canvas from "html2canvas-pro";
 import jsPDF from "jspdf";
+import { Loader2 } from "lucide-react";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -48,19 +49,24 @@ export const ShowLab = () => {
   const [labResults, setLabResults] = useState({});
   const { id } = useParams();
   const [reportDate, setReportDate] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const fetchAppointment = async () => {
       try {
+        setLoading(true);
         const res = await fetch(`${API_URL}appointments/${id}`);
         const data = await res.json();
 
         if (res.ok) {
+            setLoading(false);
           setAppointment(data.data);
         } else {
+            setLoading(false);
           alert(data.message || "Failed to fetch appointment data");
         }
       } catch (err) {
+        setLoading(false);
         alert("Error fetching appointment data");
         console.error(err);
       }
@@ -88,13 +94,14 @@ export const ShowLab = () => {
     );
   };
 
-const handleGenerateLabReport = async () => {
-  if (!appointment) {
-    alert("Appointment data not loaded yet!");
-    return;
-  }
+  const handleGenerateLabReport = async () => {
+    setLoading(true);
+    if (!appointment) {
+      alert("Appointment data not loaded yet!");
+      return;
+    }
 
-  const headerHTML = `
+    const headerHTML = `
     <div style="text-align:center; border-bottom:2px solid #000; padding-bottom:6px;">
       <h1 style="margin:0; font-size:18pt; font-weight:bold; color:#1a1a1a;">Family Care Hospital</h1>
       <h2 style="margin:5px 0 0 0; font-size:13pt; font-weight:bold; color:#b30000; text-transform:uppercase; white-space:pre;">Clinical  Laboratory</h2>
@@ -102,7 +109,9 @@ const handleGenerateLabReport = async () => {
     </div>
     <div style="margin-top:8px; display:grid; grid-template-columns:repeat(2,1fr); font-size:9pt;">
       <p><strong>MRN:</strong> ${appointment.mrn}</p>
-      <p><strong>Date:</strong> ${reportDate ? format(reportDate, "PPP") : new Date().toLocaleDateString()}</p>
+      <p><strong>Date:</strong> ${
+        reportDate ? format(reportDate, "PPP") : new Date().toLocaleDateString()
+      }</p>
       <p><strong>Name:</strong> ${appointment.name}</p>
       <p><strong>Doctor:</strong> ${appointment.doctor || "-"}</p>
       <p><strong>Age:</strong> ${appointment.age || "-"}</p>
@@ -112,7 +121,7 @@ const handleGenerateLabReport = async () => {
     </div>
   `;
 
-  const footerHTML = `
+    const footerHTML = `
     <div style="margin-top:auto; border-top:2px solid #000; padding-top:10px; text-align:center; font-size:9pt;">
       <div style="display:flex; justify-content:space-around; flex-wrap:wrap; gap:10px;">
         <div><strong>Dr. Ejaz Mazari</strong><br/>MBBS, FCPS<br/><em>Child Specialist</em></div>
@@ -125,13 +134,18 @@ const handleGenerateLabReport = async () => {
     </div>
   `;
 
-  // ✅ Separate tests
-  const cbcAvailable = appointment.labs.includes("CBC (Complete Blood Count) Basic Hematology");
-  const inHouse = appointment.labs.filter(t => inHouseTests.includes(t));
-  const outsource = appointment.labs.filter(t => outSourceTests.includes(t));
+    // ✅ Separate tests
+    const cbcAvailable = appointment.labs.includes(
+      "CBC (Complete Blood Count) Basic Hematology"
+    );
+    const inHouse = appointment.labs.filter((t) => inHouseTests.includes(t));
+    const outsource = appointment.labs.filter((t) =>
+      outSourceTests.includes(t)
+    );
 
-  // ✅ CBC table (only if available)
-  const cbcHTML = cbcAvailable ? `
+    // ✅ CBC table (only if available)
+    const cbcHTML = cbcAvailable
+      ? `
     <div style="margin-bottom:20px;">
       <h3 style="margin:0; font-size:12pt; font-weight:bold; text-decoration:underline; white-space:pre;">CBC (Complete Blood Count )</h3>
       <table style="width:100%; border-collapse:collapse; margin-top:8px; font-size:9pt;">
@@ -157,25 +171,32 @@ const handleGenerateLabReport = async () => {
             { name: "Lymphocytes", range: "30 - 75", unit: "%" },
             { name: "Eosinophils", range: "1 - 5", unit: "%" },
             { name: "Monocytes", range: "2 - 6", unit: "%" },
-          ].map(row => `
+          ]
+            .map(
+              (row) => `
             <tr>
               <td style="border:1px solid #000; padding:4px;">${row.name}</td>
-              <td style="border:1px solid #000; padding:4px;">${labResults[row.name] || "-"}</td>
+              <td style="border:1px solid #000; padding:4px;">${
+                labResults[row.name] || "-"
+              }</td>
               <td style="border:1px solid #000; padding:4px;">${row.range}</td>
               <td style="border:1px solid #000; padding:4px;">${row.unit}</td>
             </tr>
-          `).join("")}
+          `
+            )
+            .join("")}
         </tbody>
       </table>
     </div>
-  ` : "";
+  `
+      : "";
 
-  // ✅ Other in-house tests (excluding CBC)
-  const otherInHouse = inHouse
-    .filter(t => t !== "CBC (Complete Blood Count) Basic Hematology")
-    .map(test => {
-      if (test === "Blood Group") {
-        return `
+    // ✅ Other in-house tests (excluding CBC)
+    const otherInHouse = inHouse
+      .filter((t) => t !== "CBC (Complete Blood Count) Basic Hematology")
+      .map((test) => {
+        if (test === "Blood Group") {
+          return `
           <div style="margin-bottom:15px;">
             <h3 style="margin:0; font-size:11pt; font-weight:bold; text-decoration:underline;">Blood Group</h3>
             <table style="width:100%; border-collapse:collapse; margin-top:6px;">
@@ -184,48 +205,55 @@ const handleGenerateLabReport = async () => {
                 <th style="border:1px solid #000; padding:5px;">Rhesus (Rh)</th>
               </tr>
               <tr>
-                <td style="border:1px solid #000; padding:5px;">${labResults["ABO Group"] || "-"}</td>
-                <td style="border:1px solid #000; padding:5px;">${labResults["Rhesus"] || "-"}</td>
+                <td style="border:1px solid #000; padding:5px;">${
+                  labResults["ABO Group"] || "-"
+                }</td>
+                <td style="border:1px solid #000; padding:5px;">${
+                  labResults["Rhesus"] || "-"
+                }</td>
               </tr>
             </table>
           </div>
         `;
-      }
-      return `
+        }
+        return `
         <div style="margin-bottom:15px;">
           <h3 style="margin:0; font-size:11pt; font-weight:bold; text-decoration:underline;">${test}</h3>
-          <p style="margin:4px 0;"><strong>Result:</strong> ${labResults[test] || "-"}</p>
+          <p style="margin:4px 0;"><strong>Result:</strong> ${
+            labResults[test] || "-"
+          }</p>
         </div>
       `;
-    }).join("");
+      })
+      .join("");
 
-  // ✅ Outsource tests (only names)
-  const outsourceHTML = outsource.length
-    ? `
+    // ✅ Outsource tests (only names)
+    const outsourceHTML = outsource.length
+      ? `
       <div style="margin-top:20px;">
         <h3 style="font-size:11pt; text-decoration:underline;">Outsourced Tests:</h3>
         <ul style="margin-top:6px; padding-left:20px; font-size:9pt;">
-          ${outsource.map(t => `<li>${t}</li>`).join("")}
+          ${outsource.map((t) => `<li>${t}</li>`).join("")}
         </ul>
       </div>
     `
-    : "";
+      : "";
 
-  // ✅ Determine layout
-  const pageContent = cbcAvailable
-    ? {
-        page1: `${cbcHTML}`,
-        page2: `${otherInHouse}${outsourceHTML}`,
-      }
-    : {
-        page1: `${otherInHouse}${outsourceHTML}`,
-      };
+    // ✅ Determine layout
+    const pageContent = cbcAvailable
+      ? {
+          page1: `${cbcHTML}`,
+          page2: `${otherInHouse}${outsourceHTML}`,
+        }
+      : {
+          page1: `${otherInHouse}${outsourceHTML}`,
+        };
 
-  // ✅ Construct container
-  const container = document.createElement("div");
-  container.style.position = "absolute";
-  container.style.left = "-9999px";
-container.innerHTML = `
+    // ✅ Construct container
+    const container = document.createElement("div");
+    container.style.position = "absolute";
+    container.style.left = "-9999px";
+    container.innerHTML = `
   <div style="width:700px; height:950px; display:flex; flex-direction:column; justify-content:space-between; padding:30px; box-sizing:border-box;">
     ${headerHTML}
     <div style="flex:1; display:flex; flex-direction:column; align-items:flex-start; justify-content:flex-start;">
@@ -233,59 +261,69 @@ container.innerHTML = `
     </div>
     ${footerHTML}
   </div>
-  ${pageContent.page2 ? `
+  ${
+    pageContent.page2
+      ? `
     <div style="page-break-before:always; width:700px; height:950px; display:flex; flex-direction:column; justify-content:space-between; padding:30px; box-sizing:border-box;">
       ${headerHTML}
       <div style="flex:1; display:flex; flex-direction:column; align-items:flex-start; justify-content:flex-start;">
         <div style="width:100%;">${pageContent.page2}</div>
       </div>
       ${footerHTML}
-    </div>` : ""}
+    </div>`
+      : ""
+  }
 `;
 
-  document.body.appendChild(container);
+    document.body.appendChild(container);
 
-  try {
-    const pdf = new jsPDF("p", "mm", "a4");
-    const pages = container.children;
-    for (let i = 0; i < pages.length; i++) {
-      const canvas = await html2canvas(pages[i], { scale: 2, useCORS: true });
-      const imgData = canvas.toDataURL("image/jpeg");
-      const pageWidth = pdf.internal.pageSize.getWidth();
-      const imgHeight = (canvas.height * pageWidth) / canvas.width;
-      if (i > 0) pdf.addPage();
-      pdf.addImage(imgData, "JPEG", 0, 0, pageWidth, imgHeight);
+    try {
+      const pdf = new jsPDF("p", "mm", "a4");
+      const pages = container.children;
+      for (let i = 0; i < pages.length; i++) {
+        const canvas = await html2canvas(pages[i], { scale: 2, useCORS: true });
+        const imgData = canvas.toDataURL("image/jpeg");
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const imgHeight = (canvas.height * pageWidth) / canvas.width;
+        if (i > 0) pdf.addPage();
+        pdf.addImage(imgData, "JPEG", 0, 0, pageWidth, imgHeight);
+      }
+
+      const pdfBlob = new Blob([pdf.output("arraybuffer")], {
+        type: "application/pdf",
+      });
+      const formData = new FormData();
+      formData.append("mrn", appointment.mrn);
+      formData.append("file", pdfBlob, `${appointment.mrn}.pdf`);
+
+      const res = await fetch(`${API_URL}appointments/labReport`, {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        setLoading(false);
+        alert("Lab Report saved on server successfully!");
+        const url = URL.createObjectURL(pdfBlob);
+        window.open(url, "_blank");
+      } else {
+        setLoading(false);
+        alert(data.message || "Failed to save lab report.");
+      }
+    } catch (err) {
+        setLoading(false);
+      console.error("Error generating/uploading lab report:", err);
+      alert("Failed to generate lab report");
+    } finally {
+      document.body.removeChild(container);
     }
-
-    const pdfBlob = new Blob([pdf.output("arraybuffer")], { type: "application/pdf" });
-    const formData = new FormData();
-    formData.append("mrn", appointment.mrn);
-    formData.append("file", pdfBlob, `${appointment.mrn}.pdf`);
-
-    const res = await fetch(`${API_URL}appointments/labReport`, {
-      method: "POST",
-      body: formData,
-    });
-
-    const data = await res.json();
-    if (data.success) {
-      alert("Lab Report saved on server successfully!");
-      const url = URL.createObjectURL(pdfBlob);
-      window.open(url, "_blank");
-    } else {
-      alert(data.message || "Failed to save lab report.");
-    }
-  } catch (err) {
-    console.error("Error generating/uploading lab report:", err);
-    alert("Failed to generate lab report");
-  } finally {
-    document.body.removeChild(container);
-  }
-};
-
+  };
 
   const handleViewLab = async (mrn) => {
+    
     try {
+        setLoading(true);
       if (!mrn) {
         alert("MRN is missing");
         return;
@@ -296,7 +334,9 @@ container.innerHTML = `
         `${API_URL}appointments/openLabReport/${encodeURIComponent(mrn)}`,
         "_blank"
       );
+        setLoading(false);
     } catch (error) {
+        setLoading(false);
       console.error("Error opening lab report:", error);
       alert("Failed to open lab report");
     }
@@ -628,6 +668,16 @@ container.innerHTML = `
           </div>
         </CardContent>
       </Card>
+      {loading && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-neutral-900 rounded-lg p-6 shadow-lg flex flex-col items-center gap-3">
+            <Loader2 className="w-6 h-6 animate-spin text-primary" />
+            <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              Please wait...
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
