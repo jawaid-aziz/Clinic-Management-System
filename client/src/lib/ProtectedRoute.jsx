@@ -1,6 +1,6 @@
 // src/components/ProtectedRoute.jsx
 import { Navigate, Outlet } from "react-router-dom";
-import { useRole } from "@/context/RoleProvider";
+import { useRole } from "@/Context/RoleProvider";
 
 export const ProtectedRoute = () => {
   const { role, loading } = useRole();

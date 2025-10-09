@@ -2,7 +2,7 @@ import { Header } from "../Components/Header";
 import { SidebarProvider } from "@/Components/ui/sidebar";
 import { AppSidebar } from "@/Components/AppSidebar";
 import { Outlet } from "react-router-dom";
-import { useRole } from "@/context/RoleProvider";
+import { useRole } from "@/Context/RoleProvider";
 
 export const Layout = () => {
   const { role } = useRole();

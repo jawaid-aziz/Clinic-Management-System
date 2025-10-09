@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useRole } from "@/context/RoleProvider";
+import { useRole } from "@/Context/RoleProvider";
 
 const API_URL = import.meta.env.VITE_API_URL;
 

@@ -9,7 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
-import { useRole } from "@/context/RoleProvider";
+import { useRole } from "@/Context/RoleProvider";
 
 // Hardcoded role-based PINs
 const ROLE_PINS = {
