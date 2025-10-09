@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { CalendarIcon } from "lucide-react";
-import { format, set } from "date-fns";
+import { format } from "date-fns";
 import html2canvas from "html2canvas-pro";
 import jsPDF from "jspdf";
 import { Loader2 } from "lucide-react";
