@@ -247,47 +247,6 @@ async function saveLabTests(req, res) {
   }
 }
 
-// // Create folder if not exists
-// const prescriptionsDir = path.join(__dirname, "../Prescriptions");
-// if (!fs.existsSync(prescriptionsDir)) {
-//   fs.mkdirSync(prescriptionsDir);
-// }
-
-// // Configure multer storage
-// const storage = multer.diskStorage({
-//   destination: function (req, file, cb) {
-//     cb(null, prescriptionsDir);
-//   },
-//   filename: function (req, file, cb) {
-//     const { mrn } = req.body;
-//     if (!mrn) {
-//       return cb(new Error("MRN is required"), null);
-//     }
-
-//       // 🔒 Sanitize MRN (remove slashes, spaces, weird chars)
-//   const safeMrn = mrn.replace(/[^a-zA-Z0-9_-]/g, "_");
-
-//     const filePath = path.join(prescriptionsDir, `${safeMrn}.pdf`);
-
-//     // ✅ If file exists, delete it first
-//     if (fs.existsSync(filePath)) {
-//       fs.unlinkSync(filePath);
-//     }
-
-//     cb(null, `${safeMrn}.pdf`);
-//   },
-// });
-
-// const fileFilter = (req, file, cb) => {
-//   if (file.mimetype === "application/pdf") {
-//     cb(null, true);
-//   } else {
-//     cb(new Error("Only PDF files are allowed"), false);
-//   }
-// };
-
-// const upload = multer({ storage, fileFilter });
-
 const upload = multer({
   storage: multer.memoryStorage(), // keep file in memory
   fileFilter: (req, file, cb) => {
@@ -384,29 +343,11 @@ async function getPrescription(req, res) {
       });
     }
 
-    //     // Build file path
-    //     const filePath = path.join(__dirname, "../Prescriptions", prescription.fileName);
-
-    //     // Check if file exists on disk
-    //     if (!fs.existsSync(filePath)) {
-    //       return res.status(404).json({
-    //         success: false,
-    //         message: "Prescription file not found on server",
-    //       });
-    //     }
-
     // ✅ Generate a signed inline URL
     const signedUrl = cloudinary.url(prescription.url, {
-      // resource_type: "raw",
-      // type: "upload",
-      // folder: "prescriptions",
-      // format: "pdf",
       sign_url: true,    // important for signed access
     });
 
-    // // ✅ Explicitly set inline viewing
-    // res.type("pdf");
-    // res.setHeader("Content-Disposition", `inline; filename="${prescription.mrn}"`);
     return res.redirect(signedUrl);
 
   } catch (error) {
@@ -572,29 +513,47 @@ async function getLabReport(req, res) {
       });
     }
 
-    //     // Build file path
-    //     const filePath = path.join(__dirname, "../Prescriptions", prescription.fileName);
+    // ✅ Generate a signed inline URL
+    const signedUrl = cloudinary.url(labReport.url, {
+      sign_url: true,   // important for signed access
+    });
+    return res.redirect(signedUrl);
 
-    //     // Check if file exists on disk
-    //     if (!fs.existsSync(filePath)) {
-    //       return res.status(404).json({
-    //         success: false,
-    //         message: "Prescription file not found on server",
-    //       });
-    //     }
+  } catch (error) {
+    console.error("Error fetching lab report:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch lab report",
+      error: error.message,
+    });
+  }
+}
+
+// Controller to open lab report file in new tab
+async function verifyLabReport(req, res) {
+  try {
+    const { mrn } = req.params; // assuming route is /lab-report/:mrn
+
+    if (!mrn) {
+      return res.status(400).json({
+        success: false,
+        message: "MRN Number is required",
+      });
+    }
+
+    // Check DB
+    const labReport = await Lab.findOne({ mrn });
+    if (!labReport) {
+      return res.status(404).json({
+        success: false,
+        message: "Lab report not found in database",
+      });
+    }
 
     // ✅ Generate a signed inline URL
     const signedUrl = cloudinary.url(labReport.url, {
-      // resource_type: "raw",
-      // type: "upload",
-      // folder: "lab-reports",
-      // format: "pdf",
-      sign_url: true,    // important for signed access
+      sign_url: true,   // important for signed access
     });
-
-    // // ✅ Explicitly set inline viewing
-    // res.type("pdf");
-    // res.setHeader("Content-Disposition", `inline; filename="${prescription.mrn}"`);
     return res.redirect(signedUrl);
 
   } catch (error) {
@@ -621,4 +580,5 @@ module.exports = {
   saveLabTests,
   uploadLabReport,
   getLabReport,
+  verifyLabReport,
 };

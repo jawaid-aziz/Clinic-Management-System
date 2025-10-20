@@ -18,6 +18,7 @@ import { format } from "date-fns";
 import html2canvas from "html2canvas-pro";
 import jsPDF from "jspdf";
 import { Loader2 } from "lucide-react";
+import QRCode from "qrcode";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -101,8 +102,14 @@ export const ShowLab = () => {
       return;
     }
 
+  const qrLink = `${API_URL}appointments/openLabReport/${encodeURIComponent(appointment.mrn)}`;
+  const qrCodeDataURL = await QRCode.toDataURL(qrLink, { width: 100, margin: 1 });
+
     const headerHTML = `
-    <div style="text-align:center; border-bottom:2px solid #000; padding-bottom:6px;">
+    <div style="position: relative; text-align:center; border-bottom:2px solid #000; padding-bottom:6px;">
+          <!-- ✅ QR Code in top-right -->
+      <img src="${qrCodeDataURL}" alt="QR Code" style="position: absolute; top: 0; right: 0; width: 80px; height: 80px;" />
+
       <h1 style="margin:0; font-size:18pt; font-weight:bold; color:#1a1a1a;">Family Care Hospital</h1>
       <h2 style="margin:5px 0 0 0; font-size:13pt; font-weight:bold; color:#b30000; text-transform:uppercase; white-space:pre;">Clinical  Laboratory</h2>
       <p style="margin:5px 0 0 0; font-style:italic; font-size:9pt;">"Determined to serve humanity"</p>

@@ -13,6 +13,7 @@ const { addAppointment,
     saveLabTests,
     uploadLabReport,
     getLabReport,
+    verifyLabReport,
 } = require('../controllers/appointments');
 
 router.post("/add", addAppointment);
@@ -28,5 +29,6 @@ router.post("/labReport", upload.single("file"), uploadLabReport);
 router.get("/search", searchAppointment);
 router.get("/openPrescription/:mrn", getPrescription);
 router.get("/openLabReport/:mrn", getLabReport);
+router.post("/verifyLabReport/:mrn", verifyLabReport);
 
 module.exports = router;
