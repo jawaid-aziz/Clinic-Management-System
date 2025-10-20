@@ -60,10 +60,10 @@ export const ShowLab = () => {
         const data = await res.json();
 
         if (res.ok) {
-            setLoading(false);
+          setLoading(false);
           setAppointment(data.data);
         } else {
-            setLoading(false);
+          setLoading(false);
           alert(data.message || "Failed to fetch appointment data");
         }
       } catch (err) {
@@ -102,8 +102,13 @@ export const ShowLab = () => {
       return;
     }
 
-  const qrLink = `${API_URL}appointments/openLabReport/${encodeURIComponent(appointment.mrn)}`;
-  const qrCodeDataURL = await QRCode.toDataURL(qrLink, { width: 100, margin: 1 });
+    const qrLink = `${API_URL}appointments/openLabReport/${encodeURIComponent(
+      appointment.mrn
+    )}`;
+    const qrCodeDataURL = await QRCode.toDataURL(qrLink, {
+      width: 100,
+      margin: 1,
+    });
 
     const headerHTML = `
     <div style="position: relative; text-align:center; border-bottom:2px solid #000; padding-bottom:6px;">
@@ -116,15 +121,22 @@ export const ShowLab = () => {
     </div>
     <div style="margin-top:8px; display:grid; grid-template-columns:repeat(2,1fr); font-size:9pt;">
       <p><strong>MRN:</strong> ${appointment.mrn}</p>
-      <p><strong>Date:</strong> ${
+      <p><strong>Collection Date:</strong> ${
         reportDate ? format(reportDate, "PPP") : new Date().toLocaleDateString()
       }</p>
       <p><strong>Name:</strong> ${appointment.name}</p>
-      <p><strong>Doctor:</strong> ${appointment.doctor || "-"}</p>
+      <p><strong>Referred by:</strong> ${
+        appointment.doctor === "paediatrics"
+          ? "Dr. Ejaz Mazari"
+          : appointment.doctor === "gynae"
+          ? "Dr. Salma Ejaz"
+          : appointment.doctor || "-"
+      }</p>
       <p><strong>Age:</strong> ${appointment.age || "-"}</p>
       <p><strong>Sex:</strong> ${appointment.sex || "-"}</p>
       <p><strong>Phone:</strong> ${appointment.phone || "-"}</p>
       <p><strong>CNIC:</strong> ${appointment.cnic || "-"}</p>
+      <p><strong>Address:</strong> ${appointment.address || "-"}</p>
     </div>
   `;
 
@@ -132,7 +144,7 @@ export const ShowLab = () => {
     <div style="margin-top:auto; border-top:2px solid #000; padding-top:10px; text-align:center; font-size:9pt;">
       <div style="display:flex; justify-content:space-around; flex-wrap:wrap; gap:10px;">
         <div><strong>Dr. Ejaz Mazari</strong><br/>MBBS, FCPS<br/><em>Child Specialist</em></div>
-        <div><strong>Dr. Saima Ejaz</strong><br/>MBBS</div>
+        <div><strong>Dr. Salma Ejaz</strong><br/>MBBS</div>
         <div><strong>Sadaf Raheem</strong><br/><em>Lab Technologist</em></div>
       </div>
       <hr style="margin:10px auto; width:75%; border:0; border-top:1px solid #888;" />
@@ -319,7 +331,7 @@ export const ShowLab = () => {
         alert(data.message || "Failed to save lab report.");
       }
     } catch (err) {
-        setLoading(false);
+      setLoading(false);
       console.error("Error generating/uploading lab report:", err);
       alert("Failed to generate lab report");
     } finally {
@@ -328,9 +340,8 @@ export const ShowLab = () => {
   };
 
   const handleViewLab = async (mrn) => {
-    
     try {
-        setLoading(true);
+      setLoading(true);
       if (!mrn) {
         alert("MRN is missing");
         return;
@@ -341,9 +352,9 @@ export const ShowLab = () => {
         `${API_URL}appointments/openLabReport/${encodeURIComponent(mrn)}`,
         "_blank"
       );
-        setLoading(false);
+      setLoading(false);
     } catch (error) {
-        setLoading(false);
+      setLoading(false);
       console.error("Error opening lab report:", error);
       alert("Failed to open lab report");
     }

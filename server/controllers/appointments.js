@@ -566,6 +566,61 @@ async function verifyLabReport(req, res) {
   }
 }
 
+async function getDashboardStats(req, res) {
+    try {
+    const [pendingCount, completedCount, totalPrescriptions, totalLabs] = await Promise.all([
+      Appointment.countDocuments({ status: "Pending" }),
+      Appointment.countDocuments({ status: "Completed" }),
+      Prescription.countDocuments(),
+      Lab.countDocuments(),
+    ]);
+
+    const doctorStats = await Appointment.aggregate([
+      { $group: { _id: "$doctor", count: { $sum: 1 } } },
+    ]);
+
+    const genderStats = await Appointment.aggregate([
+      { $group: { _id: "$sex", count: { $sum: 1 } } },
+    ]);
+
+    // last 7 days data
+    const last7Days = new Date();
+    last7Days.setDate(last7Days.getDate() - 6);
+
+    const dailyStats = await Appointment.aggregate([
+      { $match: { date: { $gte: last7Days } } },
+      {
+        $group: {
+          _id: { $dateToString: { format: "%Y-%m-%d", date: "$date" } },
+          completed: {
+            $sum: { $cond: [{ $eq: ["$status", "Completed"] }, 1, 0] },
+          },
+          pending: {
+            $sum: { $cond: [{ $eq: ["$status", "Pending"] }, 1, 0] },
+          },
+        },
+      },
+      { $sort: { "_id": 1 } },
+    ]);
+
+    res.json({
+      success: true,
+      data: {
+        pendingCount,
+        completedCount,
+        totalPrescriptions,
+        totalLabs,
+        doctorStats,
+        genderStats,
+        dailyStats,
+      },
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: "Server Error" });
+  }
+}
+
 module.exports = {
   addAppointment,
   pendingAppointments,
@@ -581,4 +636,5 @@ module.exports = {
   uploadLabReport,
   getLabReport,
   verifyLabReport,
+  getDashboardStats,
 };

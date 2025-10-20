@@ -14,8 +14,10 @@ const { addAppointment,
     uploadLabReport,
     getLabReport,
     verifyLabReport,
+    getDashboardStats,
 } = require('../controllers/appointments');
 
+router.get("/dashboardStats", getDashboardStats);
 router.post("/add", addAppointment);
 router.get("/pending", pendingAppointments);
 router.get("/history", historyAppointments);
