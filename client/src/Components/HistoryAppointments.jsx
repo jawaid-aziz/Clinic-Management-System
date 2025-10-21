@@ -376,7 +376,7 @@ export const HistoryAppointments = () => {
         <CardContent className="flex gap-2 mt-2">
           <Input
             type="text"
-            placeholder="Search by MRN, Name, or Phone"
+            placeholder="Search by MRN, Patient's Name, Father's Name, Phone, or CNIC"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={(e) => {
@@ -463,6 +463,10 @@ export const HistoryAppointments = () => {
               <div>
                 <Label>Name:</Label>
                 <p>{selectedAppointment.name}</p>
+              </div>
+              <div>
+                <Label>Father's Name:</Label>
+                <p>{selectedAppointment.fatherName}</p>
               </div>
               <div>
                 <Label>Sex:</Label>

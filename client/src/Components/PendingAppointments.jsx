@@ -60,7 +60,7 @@ export const PendingAppointments = () => {
         appointments.map((appt) => (
           <Card key={appt._id} className="shadow-md rounded-2xl">
             <CardHeader>
-              <CardTitle>{appt.name}</CardTitle>
+              <CardTitle>{appt.name} | {appt.fatherName}</CardTitle>
               <p className="text-sm text-muted-foreground">
                 MRN: {appt.mrn} | {appt.sex}, {appt.age} yrs
               </p>

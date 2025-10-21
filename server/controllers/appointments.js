@@ -23,7 +23,10 @@ async function searchAppointment(req, res) {
       $or: [
         { mrn: { $regex: query, $options: "i" } },
         { phone: { $regex: query, $options: "i" } },
-        { name: { $regex: query, $options: "i" } }, // i = case-insensitive
+        { name: { $regex: query, $options: "i" } },
+        { fatherName: { $regex: query, $options: "i" } },
+        { cnic: { $regex: query, $options: "i" } },
+
       ],
     })
 

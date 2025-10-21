@@ -18,6 +18,7 @@ export const AddAppointment = () => {
   const [form, setForm] = useState({
     mrn: "",
     name: "",
+    fatherName: "",
     sex: "",
     age: "",
     date: "",
@@ -46,6 +47,7 @@ export const AddAppointment = () => {
         body: JSON.stringify({
           mrn: form.mrn,
           name: form.name,
+          fatherName: form.fatherName,
           sex: form.sex,
           age: form.age,
           date: form.date,
@@ -70,6 +72,7 @@ export const AddAppointment = () => {
         setForm({
           mrn: "",
           name: "",
+          fatherName: "",
           sex: "",
           age: "",
           date: "",
@@ -120,6 +123,14 @@ export const AddAppointment = () => {
                 value={form.name}
                 onChange={(e) => handleChange("name", e.target.value)}
                 placeholder="Enter Name"
+              />
+            </div>
+            <div>
+              <Label>Patient's Father Name</Label>
+              <Input
+                value={form.fatherName}
+                onChange={(e) => handleChange("fatherName", e.target.value)}
+                placeholder="Enter Father's Name"
               />
             </div>
             <div>

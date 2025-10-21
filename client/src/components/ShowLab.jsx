@@ -7,13 +7,6 @@ import { Input } from "@/Components/ui/input";
 import { Label } from "@/Components/ui/label";
 import { Table, TableBody, TableCell, TableRow } from "@/Components/ui/table";
 import { Button } from "@/Components/ui/button";
-import {
-  Popover,
-  PopoverTrigger,
-  PopoverContent,
-} from "@/Components/ui/popover";
-import { Calendar } from "@/Components/ui/calendar";
-import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import html2canvas from "html2canvas-pro";
 import jsPDF from "jspdf";
@@ -51,6 +44,8 @@ export const ShowLab = () => {
   const { id } = useParams();
   const [reportDate, setReportDate] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [labCollectionDate, setLabCollectionDate] = useState(null);
+  const [labReportedDate, setLabReportedDate] = useState(null);
 
   useEffect(() => {
     const fetchAppointment = async () => {
@@ -116,27 +111,41 @@ export const ShowLab = () => {
       <img src="${qrCodeDataURL}" alt="QR Code" style="position: absolute; top: 0; right: 0; width: 80px; height: 80px;" />
 
       <h1 style="margin:0; font-size:18pt; font-weight:bold; color:#1a1a1a;">Family Care Hospital</h1>
-      <h2 style="margin:5px 0 0 0; font-size:13pt; font-weight:bold; color:#b30000; text-transform:uppercase; white-space:pre;">Clinical  Laboratory</h2>
+      <h2 style="margin:5px 0 0 0; font-size:13pt; font-weight:bold; color:#b30000; text-transform:uppercase; white-space:pre;">Clinical   Laboratory</h2>
       <p style="margin:5px 0 0 0; font-style:italic; font-size:9pt;">"Determined to serve humanity"</p>
     </div>
-    <div style="margin-top:8px; display:grid; grid-template-columns:repeat(2,1fr); font-size:9pt;">
-      <p><strong>MRN:</strong> ${appointment.mrn}</p>
-      <p><strong>Collection Date:</strong> ${
-        reportDate ? format(reportDate, "PPP") : new Date().toLocaleDateString()
+    <div style="margin-top:8px; display:grid; grid-template-columns:repeat(2,1fr); font-size:9pt; white-space:pre-wrap; border-bottom: 1px solid #000; padding-bottom: 8px;">
+      <p><strong>MRN : </strong> ${appointment.mrn}</p>
+      <p><strong>Collection  Date : </strong> ${
+        labCollectionDate
+          ? format(labCollectionDate, "PPP p")
+          : new Date().toLocaleDateString()
       }</p>
-      <p><strong>Name:</strong> ${appointment.name}</p>
-      <p><strong>Referred by:</strong> ${
+      <p><strong>Patient  Name : </strong> ${appointment.name}</p>
+      <p><strong>Reported  Date : </strong> ${
+        labReportedDate
+          ? format(labReportedDate, "PPP p")
+          : new Date().toLocaleDateString()
+      }</p>
+      <p><strong>Father's  Name : </strong> ${appointment.fatherName}</p>
+      <p><strong>Location : </strong> ${appointment.labLocated}</p>
+      <p><strong>Age / Sex : </strong> ${appointment.age || "-"} / ${
+      appointment.sex || "-"
+    }</p>
+      <p><strong>Referred  by : </strong> ${
         appointment.doctor === "paediatrics"
           ? "Dr. Ejaz Mazari"
           : appointment.doctor === "gynae"
           ? "Dr. Salma Ejaz"
           : appointment.doctor || "-"
       }</p>
-      <p><strong>Age:</strong> ${appointment.age || "-"}</p>
-      <p><strong>Sex:</strong> ${appointment.sex || "-"}</p>
-      <p><strong>Phone:</strong> ${appointment.phone || "-"}</p>
-      <p><strong>CNIC:</strong> ${appointment.cnic || "-"}</p>
-      <p><strong>Address:</strong> ${appointment.address || "-"}</p>
+      <p><strong>Phone : </strong> ${appointment.phone || "-"}</p>
+      <p><strong>Consultant : </strong> ${" "}</p>
+      <p><strong>CNIC : </strong> ${appointment.cnic || "-"}</p>
+      <p><strong>Collection  Type : </strong> ${
+        appointment.labLocation === "InHouse" ? "Taken in Lab" : "-"
+      }</p>
+      <p><strong>Address : </strong> ${appointment.address || "-"}</p>
     </div>
   `;
 
@@ -234,6 +243,16 @@ export const ShowLab = () => {
             </table>
           </div>
         `;
+        }
+        if (test === "Blood Sugar Random/Fasting") {
+          return `
+        <div style="margin-bottom:15px;">
+          <h3 style="margin:0; font-size:11pt; font-weight:bold; text-decoration:underline;">${test}</h3>
+          <p style="margin:4px 0;"><strong>Result:</strong> ${
+            labResults[test] ? `${labResults[test]}mg/dL` : "-"
+          }</p>
+        </div>
+      `;
         }
         return `
         <div style="margin-bottom:15px;">
@@ -583,6 +602,20 @@ export const ShowLab = () => {
                                 </div>
                               </div>
                             </div>
+                          ) : test === "Blood Sugar Random/Fasting" ? (
+                            // ✅ BLOOD SUGAR FIELD (NUMERIC)
+                            <div className="flex flex-col sm:flex-row gap-2 items-center">
+                              <Label>Result (mg/dL):</Label>
+                              <Input
+                                type="number"
+                                placeholder="Enter blood sugar level"
+                                value={labResults[test] || ""}
+                                onChange={(e) =>
+                                  handleInputChange(test, e.target.value)
+                                }
+                                className="w-40"
+                              />
+                            </div>
                           ) : (
                             // ✅ ALL OTHER IN-HOUSE TESTS (Positive/Negative Option)
                             <div className="flex gap-2 items-center">
@@ -618,6 +651,34 @@ export const ShowLab = () => {
 
           <Separator />
 
+          <div className="flex items-center gap-2">
+            <Label className="font-semibold">Lab Reported Date & Time:</Label>
+            <Input
+              type="datetime-local"
+              value={
+                labReportedDate
+                  ? format(labReportedDate, "yyyy-MM-dd'T'HH:mm")
+                  : ""
+              }
+              onChange={(e) => setLabReportedDate(new Date(e.target.value))}
+              className="w-[250px]"
+            />
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Label className="font-semibold">Lab Collection Date & Time:</Label>
+            <Input
+              type="datetime-local"
+              value={
+                labCollectionDate
+                  ? format(labCollectionDate, "yyyy-MM-dd'T'HH:mm")
+                  : ""
+              }
+              onChange={(e) => setLabCollectionDate(new Date(e.target.value))}
+              className="w-[250px]"
+            />
+          </div>
+
           <div className="flex justify-between items-center text-sm flex-wrap gap-3">
             <p>
               <span className="font-semibold">Lab Collection:</span>{" "}
@@ -646,41 +707,6 @@ export const ShowLab = () => {
                 >
                   View Lab Report
                 </Button>
-              )}
-            </div>
-
-            <div className="flex items-center gap-2">
-              <Label className="font-semibold">Report Date:</Label>
-              {appointment.labReportDate ? (
-                <span>
-                  {new Date(appointment.labReportDate).toLocaleDateString()}
-                </span>
-              ) : (
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={`w-[200px] justify-start text-left font-normal ${
-                        !reportDate && "text-muted-foreground"
-                      }`}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {reportDate ? (
-                        format(reportDate, "PPP")
-                      ) : (
-                        <span>Pick a date</span>
-                      )}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={reportDate}
-                      onSelect={setReportDate}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
               )}
             </div>
           </div>

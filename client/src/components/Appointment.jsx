@@ -351,7 +351,7 @@ export const Appointment = () => {
     <div className="p-6 space-y-4">
       <Card className="shadow-md rounded-2xl">
         <CardHeader>
-          <CardTitle>{appointment.name}</CardTitle>
+          <CardTitle>{appointment.name} | {appointment.fatherName}</CardTitle>
           <p className="text-sm text-muted-foreground">
             MRN: {appointment.mrn} | {appointment.sex}, {appointment.age} yrs
           </p>

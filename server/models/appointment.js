@@ -12,6 +12,11 @@ const appointmentSchema = new mongoose.Schema({
     required: true,
     trim: true,
   },
+    fatherName: {
+    type: String,
+    required: true,
+    trim: true,
+  },
   sex: {
     type: String,
     enum: ["male", "female", "other"],
@@ -85,9 +90,17 @@ const appointmentSchema = new mongoose.Schema({
     enum: ["Pending", "Completed"],
     default: null,
   },
-  labReportDate: {
+  labCollectionDate: {
     type: Date,
     default: null,
+  },
+    labReportedDate: {
+    type: Date,
+    default: null,
+  },
+  labLocated: {
+    type: String,
+    default: "Head Office",
   },
   template: {
     type: String,
