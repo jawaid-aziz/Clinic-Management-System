@@ -12,7 +12,7 @@ import html2canvas from "html2canvas-pro";
 import jsPDF from "jspdf";
 import { Loader2 } from "lucide-react";
 import QRCode from "qrcode";
-
+import { useToast } from "@/Components/ui/use-toast";
 const API_URL = import.meta.env.VITE_API_URL;
 
 const inHouseTests = [
@@ -42,11 +42,10 @@ export const ShowLab = () => {
   const [appointment, setAppointment] = useState(null);
   const [labResults, setLabResults] = useState({});
   const { id } = useParams();
-  const [reportDate, setReportDate] = useState(null);
   const [loading, setLoading] = useState(false);
   const [labCollectionDate, setLabCollectionDate] = useState(null);
   const [labReportedDate, setLabReportedDate] = useState(null);
-
+  const { toast } = useToast(); 
   useEffect(() => {
     const fetchAppointment = async () => {
       try {
@@ -59,11 +58,19 @@ export const ShowLab = () => {
           setAppointment(data.data);
         } else {
           setLoading(false);
-          alert(data.message || "Failed to fetch appointment data");
+          toast({
+            title: "Error",
+            description: data.message || "Failed to fetch appointment data.",
+            variant: "destructive",
+          });
         }
       } catch (err) {
         setLoading(false);
-        alert("Error fetching appointment data");
+        toast({
+          title: "Error",
+          description: "Error fetching appointment data",
+          variant: "destructive",
+        });
         console.error(err);
       }
     };
@@ -93,7 +100,10 @@ export const ShowLab = () => {
   const handleGenerateLabReport = async () => {
     setLoading(true);
     if (!appointment) {
-      alert("Appointment data not loaded yet!");
+      toast({
+        title: "Error",
+        description: "Appointment data is missing",
+      });
       return;
     }
 
@@ -342,17 +352,28 @@ export const ShowLab = () => {
       const data = await res.json();
       if (data.success) {
         setLoading(false);
-        alert("Lab Report saved on server successfully!");
+        toast({
+          title: "Success",
+          description: "Lab Report saved on server successfully!",
+          variant: "default",
+        });
         const url = URL.createObjectURL(pdfBlob);
         window.open(url, "_blank");
       } else {
         setLoading(false);
-        alert(data.message || "Failed to save lab report.");
+        toast({
+          title: "Error",
+          description: data.message || "Failed to save lab report.",
+          variant: "destructive",
+        });
       }
     } catch (err) {
       setLoading(false);
-      console.error("Error generating/uploading lab report:", err);
-      alert("Failed to generate lab report");
+      toast({
+        title: "Error",
+        description: "Failed to generate lab report",
+        variant: "destructive",
+      });
     } finally {
       document.body.removeChild(container);
     }
@@ -362,7 +383,11 @@ export const ShowLab = () => {
     try {
       setLoading(true);
       if (!mrn) {
-        alert("MRN is missing");
+        toast({
+          title: "Error",
+          description: "MRN is missing",
+          variant: "destructive",
+        });
         return;
       }
 
@@ -374,8 +399,11 @@ export const ShowLab = () => {
       setLoading(false);
     } catch (error) {
       setLoading(false);
-      console.error("Error opening lab report:", error);
-      alert("Failed to open lab report");
+      toast({
+        title: "Error",
+        description: "Failed to open lab report",
+        variant: "destructive",
+      });
     }
   };
 

@@ -24,6 +24,7 @@ import {
   PopoverContent,
 } from "@/Components/ui/popover";
 
+import { useToast } from "@/Components/ui/use-toast";
 const API_URL = import.meta.env.VITE_API_URL;
 
 export const Appointment = () => {
@@ -37,7 +38,7 @@ export const Appointment = () => {
   const [timeIn, setTimeIn] = useState("");
   const [timeOut, setTimeOut] = useState("");
   const navigate = useNavigate();
-
+  const { toast } = useToast(); 
   const [labType, setLabType] = useState("");
   const [selectedTests, setSelectedTests] = useState([]);
 
@@ -48,7 +49,7 @@ export const Appointment = () => {
     "Anti HCV (Screening, ICT)",
     "Anti HIV - 1 & 2",
     "Hemoglobin",
-    "Blood Group"
+    "Blood Group",
   ];
   const outSourceTests = [
     "ICT malaria",
@@ -60,7 +61,7 @@ export const Appointment = () => {
     "AST",
     "ALP",
     "Serum Uric Acid",
-    "VDRL (Syphilis)"
+    "VDRL (Syphilis)",
   ];
 
   const formatToAMPM = (timeStr) => {
@@ -84,10 +85,18 @@ export const Appointment = () => {
           setTimeIn(data.data.timeIn || "");
           setTimeOut(data.data.timeOut || "");
         } else {
-          setError(data.message || "Failed to fetch appointment");
+          toast({
+            title: "Error",
+            description: data.message || "Failed to fetch appointment",
+            variant: "destructive",
+          });
         }
       } catch (err) {
-        setError("Something went wrong while fetching appointment.");
+        toast({
+          title: "Error",
+          description: "Something went wrong while fetching appointment.",
+          variant: "destructive",
+        });
       } finally {
         setLoading(false);
       }
@@ -114,22 +123,38 @@ export const Appointment = () => {
           timeIn,
           timeOut,
         }));
-        alert("Times updated successfully!");
+        toast({
+          title: "Success",
+          description: "Times updated successfully!",
+          duration: 4000,
+        });
       } else {
         setLoading(false);
-        alert(data.message || "Failed to update times");
+        toast({
+          title: "Error",
+          description: data.message || "Failed to update times",
+          variant: "destructive",
+        });
       }
     } catch (err) {
       setLoading(false);
       console.error(err);
-      alert("Something went wrong while saving times.");
+      toast({
+        title: "Error",
+        description: "Something went wrong while saving times.",
+        variant: "destructive",
+      });
     }
   };
-  
+
   const saveLabTests = async () => {
     setLoading(true);
     if (!labType || selectedTests.length === 0) {
-      alert("Please select lab type and tests.");
+      toast({
+        title: "Error",
+        description: "Please select lab type and tests.",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -143,15 +168,28 @@ export const Appointment = () => {
       const data = await res.json();
       if (data.success) {
         setLoading(false);
-        alert("Lab tests saved successfully!");
+        toast({
+          title: "Success",
+          description: "Lab tests saved successfully!",
+          duration: 4000,
+        });
+        window.location.reload();
       } else {
         setLoading(false);
-        alert(data.message || "Failed to save lab tests");
+        toast({
+          title: "Error",
+          description: data.message || "Failed to save lab tests",
+          variant: "destructive",
+        });
       }
     } catch (err) {
       setLoading(false);
       console.error(err);
-      alert("Something went wrong while saving lab tests.");
+      toast({
+        title: "Error",
+        description: "Something went wrong while saving lab tests.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -185,16 +223,31 @@ export const Appointment = () => {
     // Create hidden container for PDF rendering
     const hiddenDiv = document.createElement("div");
     hiddenDiv.style.paddingTop = "80px";
-    hiddenDiv.style.paddingBottom = "120px";
+    hiddenDiv.style.paddingBottom = "0px";
     hiddenDiv.style.fontFamily = "Arial, sans-serif";
     hiddenDiv.style.fontSize = "10pt";
     hiddenDiv.style.lineHeight = "1.2";
     hiddenDiv.style.maxHeight = "1000px";
     hiddenDiv.style.overflow = "hidden";
-    hiddenDiv.style.position = "absolute";
+    hiddenDiv.style.position = "relative";
     hiddenDiv.style.top = "0";
     hiddenDiv.style.left = "-9999px";
     hiddenDiv.style.visibility = "visible"; // keep it renderable
+
+    let labDetailsHTML = "";
+
+    if (appointment.labLocation) {
+      labDetailsHTML = `
+    <hr style="margin: 12px 0;" />
+    <div style="font-size:9pt;">
+      <p><strong>Lab Location:</strong> ${appointment.labLocation}</p>
+      <p><strong>Lab Tests:</strong></p>
+      <ul style="margin:4px 0; padding-left:15px;">
+        ${appointment.labs.map((lab) => `<li>${lab}</li>`).join("")}
+      </ul>
+    </div>
+  `;
+    }
 
     hiddenDiv.innerHTML = `
     <style>
@@ -202,10 +255,11 @@ export const Appointment = () => {
       p { margin-top: 2px !important; margin-bottom: 2px !important; }
       div { margin-top: 0 !important; }
     </style>
-    <div style="max-width:700px; margin:auto;">
+    <div style="max-width:900px; margin:auto;">
       <div style="display:grid; grid-template-columns: repeat(5, 1fr); gap: 6px; font-size:8pt;">
       <p><strong>MRN:</strong> ${appointment.mrn}</p>
         <p><strong>Name:</strong> ${appointment.name}</p>
+        <p><strong>Father's Name:</strong> ${appointment.fatherName}</p>
         <p><strong>Age:</strong> ${appointment.age}</p>
         <p><strong>Sex:</strong> ${appointment.sex}</p>
         <p><strong>Phone:</strong> ${appointment.phone}</p>
@@ -218,15 +272,21 @@ export const Appointment = () => {
         <p><strong>BP:</strong> ${appointment.bp}</p>
         <p><strong>Pulse:</strong> ${appointment.pulse}</p>
         <p><strong>Temperature:</strong> ${appointment.temperature}</p>
-        <p><strong>Address:</strong> ${appointment.address}</p>
         <p><strong>VCO:</strong> ${appointment.vco ? "Yes" : "No"}</p>
+        <p><strong>Address:</strong> ${appointment.address}</p>
       </div>
+
+    ${labDetailsHTML}
 
       <hr style="margin: 12px 0;" />
 
       <div style="font-size:9pt; text-align:right;">
-        <p><strong>Time In:</strong> ${timeIn && timeIn.trim() !== "" ? formatToAMPM(timeIn) : "—"}</p>
-        <p><strong>Time Out:</strong> ${timeOut && timeOut.trim() !== "" ? formatToAMPM(timeOut) : "—"}</p>
+        <p><strong>Time In:</strong> ${
+          timeIn && timeIn.trim() !== "" ? formatToAMPM(timeIn) : "—"
+        }</p>
+        <p><strong>Time Out:</strong> ${
+          timeOut && timeOut.trim() !== "" ? formatToAMPM(timeOut) : "—"
+        }</p>
       </div>
 
     <!-- ✅ Content area with stamp above it -->
@@ -297,18 +357,30 @@ export const Appointment = () => {
       const data = await res.json();
       if (data.success) {
         setLoading(false);
-        alert("Prescription saved on server successfully!");
+        toast({
+          title: "Success",
+          description: "Prescription saved successfully!",
+          duration: 4000,
+        });
         const url = URL.createObjectURL(pdfBlob);
         window.open(url, "_blank");
         navigate("/pending-appointments");
       } else {
         setLoading(false);
-        alert(data.message || "Failed to save prescription.");
+        toast({
+          title: "Error",
+          description: data.message || "Failed to save prescription.",
+          variant: "destructive",
+        });
       }
     } catch (err) {
       setLoading(false);
-      console.error("Error generating/uploading prescription:", err);
-      alert("Error generating prescription.");
+      toast({
+        title: "Error",
+        description: "Something went wrong while generating prescription.",
+        variant: "destructive",
+        duration: 5000,
+      });
     } finally {
       // Cleanup hidden div
       document.body.removeChild(hiddenDiv);
@@ -351,7 +423,9 @@ export const Appointment = () => {
     <div className="p-6 space-y-4">
       <Card className="shadow-md rounded-2xl">
         <CardHeader>
-          <CardTitle>{appointment.name} | {appointment.fatherName}</CardTitle>
+          <CardTitle>
+            {appointment.name} | {appointment.fatherName}
+          </CardTitle>
           <p className="text-sm text-muted-foreground">
             MRN: {appointment.mrn} | {appointment.sex}, {appointment.age} yrs
           </p>
@@ -496,9 +570,9 @@ export const Appointment = () => {
             </div>
           )}
           {labType && selectedTests.length > 0 && (
-          <div className="flex gap-2 mt-2">
-            <Button onClick={saveLabTests}>Save Lab Tests</Button>
-          </div>
+            <div className="flex gap-2 mt-2">
+              <Button onClick={saveLabTests}>Save Lab Tests</Button>
+            </div>
           )}
           <Separator />
 
@@ -533,7 +607,6 @@ export const Appointment = () => {
           </div>
         </div>
       )}
-
     </div>
   );
 };

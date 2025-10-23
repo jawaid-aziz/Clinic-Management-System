@@ -24,7 +24,7 @@ import jsPDF from "jspdf";
 import { renderAsync } from "docx-preview";
 import { useNavigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
-
+import { useToast } from "@/Components/ui/use-toast";
 const API_URL = import.meta.env.VITE_API_URL;
 
 export const HistoryAppointments = () => {
@@ -40,7 +40,7 @@ export const HistoryAppointments = () => {
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [docxContent, setDocxContent] = useState(null);
   const navigate = useNavigate();
-
+  const { toast } = useToast();
   // Ref to trigger hidden input
   const fileInputRef = useRef(null);
 
@@ -76,10 +76,19 @@ export const HistoryAppointments = () => {
         setAppointments(data.data);
         console.log(data.data);
       } else {
-        setError(data.message || "Failed to fetch appointments");
+        toast({
+          title: "Error",
+          description: data.message || "Failed to fetch appointments.",
+          variant: "destructive",
+        });
+        setAppointments([]);
       }
     } catch (err) {
-      setError("Something went wrong while fetching.");
+      toast({
+        title: "Error",
+        description: "Something went wrong while fetching appointments.",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
@@ -107,11 +116,19 @@ export const HistoryAppointments = () => {
         // normalize to array so UI can reuse the same table
         setAppointments(Array.isArray(data.data) ? data.data : [data.data]);
       } else {
-        setError(data.message || "No appointment found.");
+        toast({
+          title: "Error",
+          description: data.message || "No matching appointment found.",
+          variant: "destructive",
+        });
         setAppointments([]);
       }
     } catch (err) {
-      setError("Something went wrong while searching.");
+      toast({
+        title: "Error",
+        description: "Something went wrong while searching.",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
@@ -129,14 +146,21 @@ export const HistoryAppointments = () => {
       const data = await res.json();
       if (data.success) {
         setLoading(false);
-        alert("Times updated successfully!");
+        toast({ title: "Success", description: "Times updated successfully!" });
       } else {
-        alert(data.message || "Failed to update times");
+        toast({
+          title: "Error",
+          description: data.message || "Failed to update times",
+          variant: "destructive",
+        });
       }
     } catch (err) {
       setLoading(false);
-      console.error(err);
-      alert("Something went wrong while saving times.");
+      toast({
+        title: "Error",
+        description: "Something went wrong while saving times.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -156,30 +180,54 @@ export const HistoryAppointments = () => {
 
       setDocxContent(container.innerHTML);
     } else {
-      alert("Please select a valid .docx file");
+      toast({
+        title: "Error",
+        description: "Please select a valid .docx file.",
+        variant: "destructive",
+      });
     }
   };
 
   const handleGeneratePrescription = async () => {
     setLoading(true);
     if (!docxContent || !selectedAppointment) {
-      alert("Please choose a template and make sure appointment is loaded.");
+      toast({
+        title: "Error",
+        description:
+          "Please choose a template and make sure appointment is loaded.",
+        variant: "destructive",
+      });
       return;
     }
 
     // Create hidden container for PDF rendering
     const hiddenDiv = document.createElement("div");
     hiddenDiv.style.paddingTop = "80px";
-    hiddenDiv.style.paddingBottom = "120px";
+    hiddenDiv.style.paddingBottom = "0px";
     hiddenDiv.style.fontFamily = "Arial, sans-serif";
     hiddenDiv.style.fontSize = "10pt";
     hiddenDiv.style.lineHeight = "1.2";
     hiddenDiv.style.maxHeight = "1000px";
     hiddenDiv.style.overflow = "hidden";
-    hiddenDiv.style.position = "absolute";
+    hiddenDiv.style.position = "relative";
     hiddenDiv.style.top = "0";
     hiddenDiv.style.left = "-9999px";
     hiddenDiv.style.visibility = "visible"; // keep it renderable
+
+    let labDetailsHTML = "";
+
+    if (selectedAppointment.labLocation) {
+      labDetailsHTML = `
+    <hr style="margin: 12px 0;" />
+    <div style="font-size:9pt;">
+      <p><strong>Lab Location:</strong> ${selectedAppointment.labLocation}</p>
+      <p><strong>Lab Tests:</strong></p>
+      <ul style="margin:4px 0; padding-left:15px;">
+        ${selectedAppointment.labs.map((lab) => `<li>${lab}</li>`).join("")}
+      </ul>
+    </div>
+  `;
+    }
 
     hiddenDiv.innerHTML = `
     <style>
@@ -187,10 +235,11 @@ export const HistoryAppointments = () => {
       p { margin-top: 2px !important; margin-bottom: 2px !important; }
       div { margin-top: 0 !important; }
     </style>
-    <div style="max-width:700px; margin:auto;">
-      <div style="display:grid; grid-template-columns: repeat(5, 1fr); gap: 6px; font-size:8pt;">
+    <div style="max-width:900px; margin:auto;">
+      <div style="display:grid; grid-template-columns: repeat(5, 1fr); gap: 6px; font-size:9pt;">
       <p><strong>MRN:</strong> ${selectedAppointment.mrn}</p>
         <p><strong>Name:</strong> ${selectedAppointment.name}</p>
+        <p><strong>Father's Name:</strong> ${selectedAppointment.fatherName}</p>
         <p><strong>Age:</strong> ${selectedAppointment.age}</p>
         <p><strong>Sex:</strong> ${selectedAppointment.sex}</p>
         <p><strong>Phone:</strong> ${selectedAppointment.phone}</p>
@@ -208,6 +257,9 @@ export const HistoryAppointments = () => {
 
       </div>
 
+    ${labDetailsHTML}
+
+
       <hr style="margin: 12px 0;" />
       
       <div style="font-size:9pt; text-align:right;">
@@ -216,12 +268,12 @@ export const HistoryAppointments = () => {
       </div>
 
     <!-- ✅ Content area with stamp above it -->
-    <div style="font-size:10pt; line-height:1.2; margin-top:20px; position:relative;">
-      <!-- Stamp positioned absolutely -->
-      ${docxContent}
-            <img src="/stamp.png" alt="Stamp"
-           style="position:absolute; bottom:400px; right:20px; width:120px; z-index:10;" />
-    </div>
+      <div style="font-size:10pt; line-height:1.2; margin-top:20px; position:relative;">
+        <!-- Stamp positioned absolutely -->
+        ${docxContent}
+      <img src="/stamp.png" alt="Stamp"
+        style="position:absolute; bottom:500px; right:20px; width:120px; z-index:10;" />
+      </div>
     </div>
   `;
 
@@ -282,17 +334,27 @@ export const HistoryAppointments = () => {
       const data = await res.json();
       if (data.success) {
         setLoading(false);
-        alert("Prescription saved on server successfully!");
+        toast({
+          title: "Success",
+          description: "Prescription saved successfully!",
+        });
         const url = URL.createObjectURL(pdfBlob);
         window.open(url, "_blank");
       } else {
         setLoading(false);
-        alert(data.message || "Failed to save prescription.");
+        toast({
+          title: "Error",
+          description: data.message || "Failed to save prescription.",
+          variant: "destructive",
+        });
       }
     } catch (err) {
       setLoading(false);
-      console.error("Error generating/uploading prescription:", err);
-      alert("Error generating prescription.");
+      toast({
+        title: "Error",
+        description: "Something went wrong while generating prescription.",
+        variant: "destructive",
+      });
     } finally {
       // Cleanup hidden div
       document.body.removeChild(hiddenDiv);
@@ -303,7 +365,11 @@ export const HistoryAppointments = () => {
     setLoading(true);
     try {
       if (!mrn) {
-        alert("MRN is missing");
+        toast({
+          title: "Error",
+          description: "MRN is missing",
+          variant: "destructive",
+        });
         return;
       }
 
@@ -315,8 +381,11 @@ export const HistoryAppointments = () => {
       setLoading(false);
     } catch (error) {
       setLoading(false);
-      console.error("Error opening prescription:", error);
-      alert("Failed to open prescription");
+      toast({
+        title: "Error",
+        description: "Failed to open prescription",
+        variant: "destructive",
+      });
     }
   };
 
@@ -324,7 +393,11 @@ export const HistoryAppointments = () => {
     setLoading(true);
     try {
       if (!mrn) {
-        alert("MRN is missing");
+        toast({
+          title: "Error",
+          description: "MRN is missing",
+          variant: "destructive",
+        });
         return;
       }
 
@@ -339,15 +412,25 @@ export const HistoryAppointments = () => {
       const data = await res.json();
       if (data.success) {
         setLoading(false);
-        alert("Record deleted successfully!");
+        toast({
+          title: "Success",
+          description: "Record deleted successfully!",
+        });
         navigate("/history-appointments");
       } else {
-        alert(data.message || "Failed to delete record.");
+        toast({
+          title: "Error",
+          description: data.message || "Failed to delete record.",
+          variant: "destructive",
+        });
       }
     } catch (error) {
       setLoading(false);
-      console.error("Error deleting record:", error);
-      alert("Failed to delete record");
+      toast({
+        title: "Error",
+        description: "Failed to delete record",
+        variant: "destructive",
+      });
     }
   };
 

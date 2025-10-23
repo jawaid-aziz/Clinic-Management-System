@@ -5,7 +5,7 @@ import { Separator } from "@/Components/ui/separator";
 import { Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useRole } from "@/Context/RoleProvider";
-
+import { useToast } from "@/Components/ui/use-toast";
 const API_URL = import.meta.env.VITE_API_URL;
 
 export const PendingAppointments = () => {
@@ -13,7 +13,7 @@ export const PendingAppointments = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { role } = useRole();
-
+  const { toast } = useToast(); 
   // Fetch pending appointments from backend
   useEffect(() => {
     const fetchAppointments = async () => {
@@ -23,7 +23,11 @@ export const PendingAppointments = () => {
         setAppointments(data.data || []);
         console.log(data);
       } catch (error) {
-        console.error("Error fetching appointments:", error);
+        toast({
+          title: "Error",
+          description: "Failed to fetch appointments.",
+          variant: "destructive",
+        });
       } finally {
         setLoading(false);
       }

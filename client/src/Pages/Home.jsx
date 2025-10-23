@@ -6,14 +6,14 @@ import {
   LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, Legend,
   BarChart, Bar, PieChart, Pie, Cell, ResponsiveContainer,
 } from "recharts";
-
+import { useToast } from "@/Components/ui/use-toast";
 const API_URL = import.meta.env.VITE_API_URL;
 
 export const Home = () => {
   const { role } = useRole();
   const [stats, setStats] = useState(null);
   const COLORS = ["#00C49F", "#FF8042", "#0088FE"];
-
+  const { toast } = useToast(); 
   useEffect(() => {
     const fetchStats = async () => {
       try {
@@ -21,7 +21,12 @@ export const Home = () => {
         const data = await res.json();
         if (data.success) setStats(data.data);
       } catch (err) {
-        console.error("Dashboard fetch error:", err);
+        toast({
+          title: "Error",
+          description: "Failed to fetch dashboard statistics",
+          variant: "destructive",
+        });
+        console.error("Error fetching dashboard stats:", err);
       }
     };
     fetchStats();

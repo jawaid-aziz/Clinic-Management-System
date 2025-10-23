@@ -11,10 +11,12 @@ import {
   CardFooter,
 } from "@/Components/ui/card";
 import { Separator } from "@/Components/ui/separator";
+import { useToast } from "@/Components/ui/use-toast";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
 export const AddAppointment = () => {
+  const { toast } = useToast(); 
   const [form, setForm] = useState({
     mrn: "",
     name: "",
@@ -68,7 +70,11 @@ export const AddAppointment = () => {
       const data = await res.json();
 
       if (res.ok) {
-        alert("Appointment booked successfully ✅");
+        toast({
+          title: "Success",
+          description: "Appointment booked successfully",
+          duration: 4000,
+        });
         setForm({
           mrn: "",
           name: "",
@@ -89,11 +95,18 @@ export const AddAppointment = () => {
           temperature: "",
         });
       } else {
-        alert("Error: " + data.error);
+        toast({
+          title: "Error",
+          description: data.error,
+          duration: 4000,
+        });
       }
     } catch (err) {
-      console.error(err);
-      alert("Something went wrong");
+      toast({
+        title: "Error",
+        description: "Failed to book appointment. Please try again.",
+        duration: 4000,
+      });
     }
   };
 
